@@ -17,12 +17,13 @@ export const GameScreen = {
         <!-- Live Camera feed overlay logic (small PiP format) -->
         <div class="game-screen__camera-pip" id="game-camera-pip" style="
           position: absolute; 
-          bottom: max(var(--safe-bottom), var(--space-xl)); 
-          left: max(var(--safe-left), var(--space-xl));
-          width: 320px; 
-          height: 240px; 
-          border: 4px solid var(--accent-orange);
-          border-radius: var(--radius-md);
+          bottom: max(var(--safe-bottom), 40px); 
+          left: max(var(--safe-left), 40px);
+          width: calc(clamp(300px, 35vw, 400px) - 80px);
+          aspect-ratio: 1 / 1;
+          height: auto;
+          border: 6px solid #4a4e69;
+          border-radius: 50%; /* Make it look like the circle in the reference image */
           overflow: hidden;
           background: #000;
           z-index: 50;
@@ -34,7 +35,16 @@ export const GameScreen = {
           <!-- Flip canvas to map nicely over the mirrored video -->
           <canvas id="game-canvas" width="640" height="480" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></canvas>
         </div>
-        
+        <!-- Timer Display overlay (Mirroring Pause Button exactly but locked to left of right panel) -->
+        <div class="menu-btn" id="game-timer-dom" style="
+          position: absolute; 
+          top: max(var(--safe-top), var(--space-md)); 
+          z-index: 50;
+          padding: 8px 12px;
+          font-size: var(--text-sm);
+          pointer-events: none;
+        ">00:00</div>
+
         <!-- Pause / Exit Button overlay -->
         <button class="menu-btn" id="btn-pause" style="
           position: absolute; 

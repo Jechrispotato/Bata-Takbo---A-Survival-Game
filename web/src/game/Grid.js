@@ -23,37 +23,68 @@ export class Grid {
 
   calculateGrid() {
     const { width, height } = this.scene.scale;
-    
-    // We want the grid to leave some padding on the sides and top/bottom for HUD
-    const paddingX = width * 0.1; 
-    const paddingY = height * 0.15; 
+    const leftWidth = Math.max(250, Math.min(450, width * 0.28));
+    const rightWidth = width - leftWidth;
+    const rightHeight = height;
 
-    const rawWidth = (width - paddingX * 2) / this.cols;
-    const rawHeight = (height - paddingY * 2) / this.rows;
+    this.panelRect = {
+      x: leftWidth,
+      y: 0,
+      w: rightWidth,
+      h: rightHeight
+    };
+
+    // Calculate maximum STRICTLY SQUARE tileSize to fit within the right panel with significant padding
+    const paddingX = rightWidth * 0.12; 
+    const paddingY = rightHeight * 0.12;
+    const availableWidth = rightWidth - paddingX * 2;
+    const availableHeight = rightHeight - paddingY * 2;
+
+    const rawWidth = availableWidth / this.cols;
+    const rawHeight = availableHeight / this.rows;
     
-    // The tile should ideally be square, so take the smaller dimension
+    // STRICT SQUARE preserves projectile/highlight integrity
     this.tileSize = Math.floor(Math.min(rawWidth, rawHeight));
     
-    // Calculate total grid dimensions
+    // The exact size of the grid itself inside the panel
     const gridWidth = this.tileSize * this.cols;
     const gridHeight = this.tileSize * this.rows;
 
-    // Center vertically, align to the RIGHT with padding
-    this.offsetX = width - gridWidth - paddingX;
-    this.offsetY = (height - gridHeight) / 2;
+    // Perfectly center the grid INSIDE the right panel avoiding any bleed.
+    this.offsetX = leftWidth + Math.floor((rightWidth - gridWidth) / 2);
+    this.offsetY = Math.floor((rightHeight - gridHeight) / 2);
   }
 
   drawBackground() {
+    this.bgGraphics = this.scene.add.graphics();
     this.graphics = this.scene.add.graphics();
     this.render();
   }
 
   render() {
+    this.bgGraphics.clear();
     this.graphics.clear();
 
-    const lineStyle = { width: 2, color: 0x4a4e69, alpha: 0.5 };
+    const lineStyle = { width: 2, color: 0x4a4e69, alpha: 0.8 };
     const fillLight = 0x22223b;
     const fillDark = 0x1a1a2e;
+    const panelBg = 0x151530; // Consistent background panel color for the whole right span
+
+    // 1. Fill the ENTIRE right panel explicitly (eliminates outer black space)
+    this.bgGraphics.fillStyle(panelBg, 1);
+    this.bgGraphics.fillRect(this.panelRect.x, this.panelRect.y, this.panelRect.w, this.panelRect.h);
+    
+    // 2. Thick Outer frame around the complete right panel edges
+    this.bgGraphics.lineStyle(10, 0x4a4e69, 1);
+    this.bgGraphics.strokeRect(this.panelRect.x + 5, this.panelRect.y + 5, this.panelRect.w - 10, this.panelRect.h - 10);
+    this.bgGraphics.lineStyle(2, 0x8a8e99, 1);
+    this.bgGraphics.strokeRect(this.panelRect.x + 10, this.panelRect.y + 10, this.panelRect.w - 20, this.panelRect.h - 20);
+
+    // 3. Crisp frame directly outlining the centered inner game grid
+    const gridW = this.tileSize * this.cols;
+    const gridH = this.tileSize * this.rows;
+    this.bgGraphics.lineStyle(6, 0x4a4e69, 1);
+    this.bgGraphics.strokeRect(this.offsetX - 3, this.offsetY - 3, gridW + 6, gridH + 6);
 
     for (let r = 0; r < this.rows; r++) {
       this.cells[r] = [];

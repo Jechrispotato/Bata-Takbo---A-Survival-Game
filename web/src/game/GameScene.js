@@ -39,13 +39,8 @@ export class GameScene extends Phaser.Scene {
     // 1. Calculate screen bounds for responsive logic
     const { width, height } = this.scale;
     
-    // 2. Temp debug text to verify engine
-    this.add.text(width / 2, height / 2, `CHAPTER ${this.chapterId}\nPhaser Engine Online`, {
-      fontFamily: 'VCR',
-      fontSize: '24px',
-      color: '#ffd700',
-      align: 'center'
-    }).setOrigin(0.5);
+    // 2. Clear temp debugging strings since they're in HUD now
+
 
     // 3. Initialize dynamic 7x9 Grid
     // For later chapters, we can vary these rows/cols based on this.chapterId
