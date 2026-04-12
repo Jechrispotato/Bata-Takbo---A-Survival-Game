@@ -12,6 +12,8 @@ import { GestureTraining } from './screens/GestureTraining.js';
 import { Spellbook } from './screens/Spellbook.js';
 import { Leaderboard } from './screens/Leaderboard.js';
 import { About } from './screens/About.js';
+import { GameScreen } from './screens/GameScreen.js';
+import { ResultsScreen } from './screens/ResultsScreen.js';
 
 // Initialize screen manager
 const screenManager = new ScreenManager('screen-container');
@@ -27,6 +29,8 @@ screenManager.register('gesture-training', GestureTraining);
 screenManager.register('spellbook', Spellbook);
 screenManager.register('leaderboard', Leaderboard);
 screenManager.register('about', About);
+screenManager.register('game-screen', GameScreen);
+screenManager.register('results-screen', ResultsScreen);
 
 // Hide loading overlay and show main menu
 async function init() {

@@ -1157,22 +1157,50 @@ Bata-Takbo---A-Survival-Game/
 - [ ] Add gesture event emitter (debounced directional output)
 - [ ] Add sensitivity and debounce settings
 
-### Phase 3: Game Engine Core (Week 5-7)
-- [ ] Set up Phaser 3 instance inside the app
-- [ ] Build grid system (7×9, tile rendering with tileset)
-- [ ] Implement player entity (grid movement, animations)
-- [ ] Load and animate character spritesheets
-- [ ] Implement boss entity (display in HUD, HP system)
-- [ ] Build projectile system (arc animation, item sprites)
-- [ ] Implement telegraph system (red tile indicators)
-- [ ] Build damage tile mechanic (golden glow tile)
-- [ ] Connect gesture events → player movement
-- [ ] Implement scoring system
-- [ ] Build HUD (lives, boss HP, camera feed, score, timer)
+### Phase 3: Game Engine Core (Execution Plan)
+We are now entering Phase 3. The execution will be broken into the following sequential steps:
+
+#### Step 3.1: Phaser Infrastructure
+- **Install Phaser 3:** Run `npm install phaser`
+- **GameScreen:** Build `src/screens/GameScreen.js` to house the game container and handle lifecycle rules (booting Phaser on enter, destroying Phaser on exit).
+- **Game Config:** Create the fundamental `Phaser.Game` configuration with `GameScene` and `HUDScene`.
+
+#### Step 3.2: Grid & Environment
+- **Grid Layout:** Write `Grid.js` to programmatically build the grid. The **logical tiles** (e.g. 7x9 or 5x5) will be strictly hardcoded per chapter so that NO device gains a gameplay advantage. Only the *visual pixel art size* will dynamically scale to fit the screen.
+- **Tilesets:** Preload `mainlevbuild.png` to construct visually distinct safe/warning tiles.
+
+#### Step 3.3: Player Entity & Controls
+- **Player.js:** Create the player entity and attach sprites.
+- **Grid Movement:** Write logic to snap the player between discreet grid tiles using smooth Phaser Tweens.
+- **Gesture Hooks:** Bind the `GestureController` (from Phase 2) global events to the Phaser Input bus, translating real-life gestures to grid movement!
+
+#### Step 3.4: Boss AI & Projectiles (The Skeleton)
+- **Boss.js:** Lay the groundwork for boss phases and idle animations.
+- **Telegraphing:** Build the "red flashing tile" logic for incoming projectiles.
+- **Projectiles & Damage:** Launch static loots toward telegraphed tiles and implement basic damage logic (Player loses HP if standing on target tile during impact).
+
+### Chapter 1 Vertical Slice (End-To-End Execution)
+Per user request, we perform a **Vertical Slice** on Chapter 1 prior to building out the remaining chapters. This fulfills subsets of Phases 4, 5, and 6 instantly for the first level:
+
+#### Step 4.1: Pixel Art Rendering
+- Load character spritesheets (`male/idle`, `walk`, `dash`) into `Player.js`.
+- Animate movement tweens syncing with pixel-art walk cycles.
+- Mount the RedCap boss portrait and `Static Loots` as actual falling `Projectile.js` visuals.
+
+#### Step 4.2: Chapter 1 Boss Patterns & Game Over
+- Implement RedCap's specific attacks: Scatter Shot, Drop Column, Sweep, Center Blast.
+- Finalize damage tile logic (Golden tile) to hurt the boss.
+- Build the "Victory" and "Game Over" Phaser scenes/modals that spawn when Boss HP drops to 0 or Player HP drops to 0.
+
+#### Step 4.3: HUD & GUI Polish (Phase 6 Subset)
+- Inject pixel art GUI elements from `GUISprite.png` for Player Hearts and Boss Health bars.
+- Add hit particles and visual explosion FX when projectiles land.
+
+#### Step 4.4: Leaderboard & Results (Phase 5 Subset)
+- When the boss dies, record the survival time and score to `StateManager`.
+- Transition the SPA from the Phaser Canvas to the `ResultsScreen`.
 
 ### Phase 4: Chapter Design (Week 8-9)
-- [ ] Design and implement Chapter 1 attack patterns
-- [ ] Build and balance Chapter 1 (playtesting!)
 - [ ] Design and implement Chapter 2 (walls + line attacks)
 - [ ] Design and implement Chapter 3 (permanent maze)
 - [ ] Build Chapter Select screen with unlock logic
