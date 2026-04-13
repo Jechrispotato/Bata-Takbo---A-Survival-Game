@@ -12,31 +12,20 @@ export class Boss {
     
     this.hp = 5;
     this.maxHp = 5;
-    
     this.waveCount = 0;
 
-    // Draw the boss portrait in the top-left UI quadrant (first 40% of screen)
-    const { width } = scene.scale;
-    this.sprite = scene.add.sprite(width * 0.2, 180, 'boss_redcap');
-    this.sprite.setScale(0.35); // Adjust relative to 1024x485 Duende Sprite
-    this.sprite.setOrigin(0.5, 0.5);
-    
-    // Simple floating animation
-    this.scene.tweens.add({
-      targets: this.sprite,
-      y: 85,
-      yoyo: true,
-      repeat: -1,
-      duration: 1200,
-      ease: 'Sine.easeInOut'
-    });
+    // Boss sprite is rendered by HUDScene (since HUD covers the left panel).
+    // Projectiles originate from the top-center of the grid area.
+    const gridCenterX = grid.offsetX + (grid.tileSize * grid.cols) / 2;
+    this.projectileOriginX = gridCenterX;
+    this.projectileOriginY = grid.offsetY - 30;
 
     this.startAttackLoop();
   }
 
   startAttackLoop() {
     this.attackTimer = this.scene.time.addEvent({
-      delay: 3500, // Attack every 3.5 seconds
+      delay: 3500,
       callback: this.executeAttack,
       callbackScope: this,
       loop: true
@@ -46,7 +35,7 @@ export class Boss {
   executeAttack() {
     this.waveCount++;
     
-    // Every 4th wave, spawn the Golden Damage Tile instead of attacking!
+    // Every 4th wave, spawn the Golden Damage Tile
     if (this.waveCount % 4 === 0) {
       this.spawnDamageTile();
       return;
@@ -80,69 +69,52 @@ export class Boss {
       // Center Blast
       const mc = Math.floor(this.grid.cols / 2);
       const mr = Math.floor(this.grid.rows / 2);
-      targets.push({c: mc, r: mr}, {c: mc-1, r: mr}, {c: mc+1, r: mr}, {c: mc, r: mr-1}, {c: mc, r: mr+1});
+      targets.push(
+        { c: mc, r: mr }, { c: mc - 1, r: mr }, { c: mc + 1, r: mr },
+        { c: mc, r: mr - 1 }, { c: mc, r: mr + 1 }
+      );
     }
+
+    // Tell HUDScene to play boss attack animation
+    this.scene.events.emit('boss:attack');
 
     // Unleash projectiles
     targets.forEach(t => {
-      // Phase 1: Telegraph (Red Warning)
       this.grid.telegraph(t.c, t.r, 1500);
-
-      // Phase 2: Launch projectile after a delay
       this.scene.time.delayedCall(1500, () => {
-        if(this.hp > 0) {
-           new Projectile(this.scene, this.grid, this.sprite.x, this.sprite.y, t.c, t.r);
+        if (this.hp > 0) {
+          new Projectile(this.scene, this.grid, this.projectileOriginX, this.projectileOriginY, t.c, t.r);
         }
       });
-    });
-    
-    // Play a "throw" animation bounce
-    this.scene.tweens.add({
-      targets: this.sprite,
-      scaleY: 0.6,
-      scaleX: 1.0,
-      yoyo: true,
-      duration: 150
     });
   }
 
   spawnDamageTile() {
-    // Spawn a golden tile
     const tC = Phaser.Math.Between(0, this.grid.cols - 1);
-    const tR = Phaser.Math.Between(4, this.grid.rows - 1); // Only spawn in bottom half so player can reach it
+    const tR = Phaser.Math.Between(3, this.grid.rows - 1);
     
     this.grid.highlightTile(tC, tR, 0xffd700, 0.8);
     this.scene.events.emit('damageTile:spawned', tC, tR);
     
-    // Disappears after 4 seconds
     this.scene.time.delayedCall(4000, () => {
       this.scene.events.emit('damageTile:despawned', tC, tR);
-      this.grid.render(); // Clear highlighted tile
+      this.grid.render();
     });
   }
 
   takeDamage() {
     this.hp--;
-    // Screen shake / flash red
     this.scene.cameras.main.shake(200, 0.02);
-    
+    this.scene.events.emit('boss:damaged', this.hp, this.maxHp);
+
     if (this.hp <= 0) {
       this.die();
     }
   }
 
   die() {
-    if(this.attackTimer) this.attackTimer.remove();
-    this.scene.tweens.add({
-      targets: this.sprite,
-      scaleX: 0,
-      scaleY: 0,
-      alpha: 0,
-      duration: 500,
-      onComplete: () => {
-        console.log("BOSS DEFEATED");
-        this.scene.events.emit('boss:died');
-      }
-    });
+    if (this.attackTimer) this.attackTimer.remove();
+    console.log("BOSS DEFEATED");
+    this.scene.events.emit('boss:died');
   }
 }

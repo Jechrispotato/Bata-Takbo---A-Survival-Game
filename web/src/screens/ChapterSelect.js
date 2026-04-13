@@ -10,9 +10,9 @@ export const ChapterSelect = {
     const unlocked = progress.chaptersUnlocked || [1];
 
     const chapters = [
-      { id: 1, img: '/assets/ui/duende.jpg', name: 'Duende', chapterText: 'CHAPTER 1', accent: '#ff4c4c' },
-      { id: 2, img: '/assets/ui/duende.jpg', name: 'Unknown', chapterText: 'CHAPTER 2', accent: '#4cff4c' },
-      { id: 3, img: '/assets/ui/duende.jpg', name: 'Unknown', chapterText: 'CHAPTER 3', accent: '#4c4cff' },
+      { id: 1, img: '/assets/ui/chapters/chapter1.png', name: 'Duende', chapterText: 'CHAPTER 1', accent: '#ff4c4c' },
+      { id: 2, img: '/assets/ui/chapters/chapter1.png', name: 'Unknown', chapterText: 'CHAPTER 2', accent: '#4cff4c' },
+      { id: 3, img: '/assets/ui/chapters/chapter1.png', name: 'Unknown', chapterText: 'CHAPTER 3', accent: '#4c4cff' },
     ];
 
     const cardsHtml = chapters.map((ch, i) => {
@@ -27,7 +27,7 @@ export const ChapterSelect = {
              data-chapter="${ch.id}" 
              id="chapter-card-${ch.id}"
              style="animation: scaleIn 0.5s ease forwards; animation-delay: ${i * 0.15}s; opacity: 0; --card-accent: ${ch.accent};">
-          <img src="${ch.img}" alt="${ch.name}" class="chapter-card__img" />
+          <img src="${isUnlocked ? ch.img : '/assets/ui/chapters/locked-chapter.png'}" alt="${ch.name}" class="chapter-card__img" />
           <div class="chapter-card__info">
             <span class="chapter-card__number">${ch.chapterText}</span>
             <span class="chapter-card__title">${ch.name}</span>

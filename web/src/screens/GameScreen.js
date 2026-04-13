@@ -14,46 +14,37 @@ export const GameScreen = {
         <!-- Phaser engine mounts here -->
         <div id="phaser-container" style="width: 100%; height: 100%;"></div>
         
-        <!-- Live Camera feed overlay logic (small PiP format) -->
+        <!-- Live Camera feed overlay (positioned by HUDScene over the bottom-left box) -->
         <div class="game-screen__camera-pip" id="game-camera-pip" style="
           position: absolute; 
-          bottom: max(var(--safe-bottom), 40px); 
-          left: max(var(--safe-left), 40px);
-          width: calc(clamp(300px, 35vw, 400px) - 80px);
-          aspect-ratio: 1 / 1;
-          height: auto;
-          border: 6px solid #4a4e69;
-          border-radius: 50%; /* Make it look like the circle in the reference image */
+          bottom: 40px; 
+          left: 40px;
+          width: 200px;
+          height: 200px;
+          border: none;
           overflow: hidden;
           background: #000;
           z-index: 50;
           pointer-events: none;
-          box-shadow: 0 0 20px rgba(0,0,0,0.8);
         ">
-          <!-- Flip webcam horizontally -->
-          <video id="game-video" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
-          <!-- Flip canvas to map nicely over the mirrored video -->
-          <canvas id="game-canvas" width="640" height="480" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></canvas>
+          <video id="game-video" style="width: 100%; height: 100%; object-fit: cover;"></video>
+          <canvas id="game-canvas" width="640" height="480" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"></canvas>
         </div>
-        <!-- Timer Display overlay (Mirroring Pause Button exactly but locked to left of right panel) -->
-        <div class="menu-btn" id="game-timer-dom" style="
+
+        <!-- Timer Display (positioned by HUDScene) -->
+        <div id="game-timer-dom" style="
           position: absolute; 
-          top: max(var(--safe-top), var(--space-md)); 
+          top: 8px; 
+          left: 60px;
           z-index: 50;
-          padding: 8px 12px;
-          font-size: var(--text-sm);
+          padding: 4px 8px;
+          font-family: 'VCR', monospace;
+          font-size: 16px;
+          color: #f0e6d3;
           pointer-events: none;
         ">00:00</div>
 
-        <!-- Pause / Exit Button overlay -->
-        <button class="menu-btn" id="btn-pause" style="
-          position: absolute; 
-          top: max(var(--safe-top), var(--space-md)); 
-          right: max(var(--safe-right), var(--space-md));
-          z-index: 50;
-          padding: 8px 12px;
-          font-size: var(--text-sm);
-        ">❚❚ PAUSE</button>
+        <!-- Pause / Exit Button overlay is removed from DOM (now in HUDScene) -->
 
         <div id="pause-menu" class="hidden" style="
           position: absolute;
@@ -82,14 +73,12 @@ export const GameScreen = {
     this.pauseMenu = el.querySelector('#pause-menu');
     this.isPaused = false;
     
-    // Store active chapter
     const chapterId = params.chapterId || 1;
     
     // 1. Boot up ML Gestures
     try {
       await gestureController.initialize(this.videoEl, this.canvasEl);
       await gestureController.startCamera();
-      // Put gesture controller into active non-record testing mode automatically
     } catch (e) {
       console.warn('Camera failed to start in game', e);
     }
@@ -97,13 +86,12 @@ export const GameScreen = {
     // 2. Adjust PiP view depending on settings
     const currentSettings = state.get('settings');
     const pip = el.querySelector('#game-camera-pip');
-    if (currentSettings && !currentSettings.camera.showSkeleton && currentSettings.camera.privacyMode) {
-      // If privacy mode is on, and skeleton is off, hide feed
+    if (currentSettings && currentSettings.camera && !currentSettings.camera.showSkeleton && currentSettings.camera.privacyMode) {
       pip.style.display = 'none';
     }
 
     // 3. Initialize Game Engine
-    // Phaser takes over the #phaser-container div width/height natively
+    // FIX: Don't auto-start scenes. Add them manually to prevent double-creation.
     const config = {
       type: Phaser.AUTO,
       parent: 'phaser-container',
@@ -112,37 +100,31 @@ export const GameScreen = {
         width: '100%',
         height: '100%'
       },
-      pixelArt: true, // Crucial for our art style
-      transparent: true, // Let CSS handle base background if needed
+      pixelArt: true,
+      transparent: true,
       physics: {
         default: 'arcade',
-        arcade: {
-          debug: false
-        }
+        arcade: { debug: false }
       },
-      scene: [GameScene, HUDScene]
+      scene: [] // Empty — we add scenes manually below
     };
 
     this.game = new Phaser.Game(config);
 
-    // Pass data into the scene manually once started
+    // Add scenes manually ONCE with the correct data, preventing double-start
     this.game.events.on('ready', () => {
-      // Because GameScene is at index 0, it auto-starts. Stop it to pass data properly, or restart it
-      const gameScene = this.game.scene.getScene('GameScene');
-      if(gameScene) {
-        gameScene.scene.restart({ chapterId });
-      }
+      this.game.scene.add('GameScene', GameScene, true, { chapterId });
+      this.game.scene.add('HUDScene', HUDScene, false);
+      // GameScene.create() will call scene.launch('HUDScene') when ready
     });
     
-    // Tell state we are in game so GestureController emits inputs
     state.set('currentScreen', 'game');
 
     // 4. Bind UI Controls
-    el.querySelector('#btn-pause').addEventListener('click', () => this.togglePause(true));
+    this.unsubGamePause = state.on('game:pause', () => this.togglePause(true));
     el.querySelector('#btn-resume').addEventListener('click', () => this.togglePause(false));
     
     el.querySelector('#btn-quit').addEventListener('click', () => {
-      // Teardown everything
       this.game.destroy(true);
       gestureController.stopCamera();
       window.__screenManager.navigate('main-menu', {}, false);
@@ -150,8 +132,12 @@ export const GameScreen = {
   },
 
   onLeave() {
+    if (this.unsubGamePause) {
+      this.unsubGamePause();
+      this.unsubGamePause = null;
+    }
     if (this.game) {
-      this.game.destroy(true); // Terminate entire webgl context
+      this.game.destroy(true);
       this.game = null;
     }
     gestureController.stopCamera();
@@ -161,7 +147,6 @@ export const GameScreen = {
   togglePause(shouldPause) {
     this.isPaused = shouldPause;
     
-    // Toggle menu
     if (shouldPause) {
       this.pauseMenu.classList.remove('hidden');
       if (this.game) {
@@ -174,9 +159,6 @@ export const GameScreen = {
         this.game.scene.resume('GameScene');
         this.game.scene.resume('HUDScene');
       }
-      
-      // Auto-trigger camera check if context was lost
-      // gestureController.startCamera(); // (Usually not needed unless iOS strictly suspends tracks)
     }
   }
 };

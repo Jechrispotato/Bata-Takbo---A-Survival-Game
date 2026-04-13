@@ -50,6 +50,10 @@ export class Grid {
     const gridWidth = this.tileSize * this.cols;
     const gridHeight = this.tileSize * this.rows;
 
+    // Expose board dimensions for external layout
+    this.boardWidth = gridWidth;
+    this.boardHeight = gridHeight;
+
     // Perfectly center the grid INSIDE the right panel avoiding any bleed.
     this.offsetX = leftWidth + Math.floor((rightWidth - gridWidth) / 2);
     this.offsetY = Math.floor((rightHeight - gridHeight) / 2);
@@ -68,9 +72,9 @@ export class Grid {
     const lineStyle = { width: 2, color: 0x4a4e69, alpha: 0.8 };
     const fillLight = 0x22223b;
     const fillDark = 0x1a1a2e;
-    const panelBg = 0x151530; // Consistent background panel color for the whole right span
+    const panelBg = 0x151530;
 
-    // 1. Fill the ENTIRE right panel explicitly (eliminates outer black space)
+    // 1. Fill the ENTIRE right panel explicitly
     this.bgGraphics.fillStyle(panelBg, 1);
     this.bgGraphics.fillRect(this.panelRect.x, this.panelRect.y, this.panelRect.w, this.panelRect.h);
     
@@ -119,6 +123,10 @@ export class Grid {
     };
   }
 
+  /**
+   * Draw a permanently highlighted tile (used for golden damage tiles).
+   * For temporary highlights, use telegraph() instead.
+   */
   highlightTile(col, row, colorHex = 0xff0000, alpha = 0.5) {
     const x = this.offsetX + col * this.tileSize;
     const y = this.offsetY + row * this.tileSize;
@@ -126,9 +134,31 @@ export class Grid {
     this.graphics.fillRect(x, y, this.tileSize, this.tileSize);
   }
 
+  /**
+   * Show a temporary red warning tile that auto-disappears after durationMs.
+   * Uses a separate graphics object so it doesn't pollute the base grid.
+   */
   telegraph(col, row, durationMs = 1500) {
-     this.highlightTile(col, row, 0xff0000, 0.6);
-     // Warning: this modifies the root graphics. True implementation should use temporary graphics/sprites.
-     // For Step 3.2 this is a visual stub.
+    const x = this.offsetX + col * this.tileSize;
+    const y = this.offsetY + row * this.tileSize;
+
+    // Create a dedicated temporary graphics object for this telegraph
+    const tempGfx = this.scene.add.graphics();
+    tempGfx.fillStyle(0xff0000, 0.5);
+    tempGfx.fillRect(x, y, this.tileSize, this.tileSize);
+
+    // Pulse animation to make it visually obvious
+    this.scene.tweens.add({
+      targets: tempGfx,
+      alpha: 0.3,
+      yoyo: true,
+      repeat: 3,
+      duration: durationMs / 6,
+    });
+
+    // Auto-destroy after the warning period
+    this.scene.time.delayedCall(durationMs, () => {
+      tempGfx.destroy();
+    });
   }
 }

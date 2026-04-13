@@ -59,7 +59,7 @@
 
   /* Typography */
   --font-ui: 'VCR', 'Courier New', monospace;
-  --font-display: 'DirtyHarold', 'Georgia', serif;
+  --font-display: 'VCR', 'Courier New', monospace;
 
   --text-xs: clamp(0.6rem, 1.5vw, 0.75rem);
   --text-sm: clamp(0.75rem, 2vw, 0.9rem);
@@ -677,7 +677,7 @@ a {
 
 .chapter-card.locked {
   cursor: not-allowed;
-  filter: brightness(0.6);
+  filter: brightness(0.8);
 }
 
 .chapter-card.locked:hover {
@@ -698,11 +698,14 @@ a {
 
 .chapter-card__info {
   position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
+  bottom: calc(var(--space-md) + 50px);
+  left: 0;
+  width: 100%;
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .chapter-card__number {

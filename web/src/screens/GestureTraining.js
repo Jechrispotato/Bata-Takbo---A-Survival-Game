@@ -50,6 +50,11 @@ export const GestureTraining = {
             <span class="gesture-dir-btn__label">RIGHT</span>
             <span class="gesture-dir-btn__count">0</span>
           </button>
+          <button class="gesture-dir-btn" data-dir="idle" id="dir-idle" style="border-color: var(--accent-gold);">
+            <span class="gesture-dir-btn__arrow">✋</span>
+            <span class="gesture-dir-btn__label">REST</span>
+            <span class="gesture-dir-btn__count">0</span>
+          </button>
         </div>
 
         <div class="progress-bar" style="animation: fadeInUp 0.4s ease 0.2s forwards;">
@@ -198,7 +203,7 @@ export const GestureTraining = {
 
   _updateUIFromCounts(overrideCounts = null) {
     const counts = overrideCounts || gestureController.getSampleCounts();
-    const dirs = ['up', 'down', 'left', 'right'];
+    const dirs = ['up', 'down', 'left', 'right', 'idle'];
     
     dirs.forEach(dir => {
       const count = counts[dir] || 0;

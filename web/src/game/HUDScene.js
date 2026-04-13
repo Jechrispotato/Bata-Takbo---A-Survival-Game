@@ -15,140 +15,217 @@ export class HUDScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const leftWidth = Math.max(250, Math.min(450, width * 0.28));
 
-    // Left HUD Panel Background
+    // ========== LEFT PANEL BACKGROUND ==========
     this.panelBg = this.add.graphics();
     this.panelBg.fillStyle(0x0a0a1a, 1); 
     this.panelBg.fillRect(0, 0, leftWidth, height);
     
-    // Panel Divider
+    // Panel divider line
     this.panelBg.lineStyle(4, 0x4a4e69, 1);
     this.panelBg.beginPath();
     this.panelBg.moveTo(leftWidth, 0);
     this.panelBg.lineTo(leftWidth, height);
     this.panelBg.strokePath();
 
-    // Centering Fix: Use a larger symmetric padding to shrink bounding boxes slightly and perfectly target the left panel horizontal center
-    const padX = 28; 
-    let boxSize = leftWidth - (padX * 2);
+    // ========== TOP BAR (inside left panel) ==========
+    const padX = 12;
 
-    // Guard against very short screens forcing overlap
-    const minRequiredHeight = boxSize * 2 + 80;
-    if (height < minRequiredHeight) {
-       boxSize = Math.floor((height - 80) / 2);
-    }
+    // Pause icon (left corner)
+    const pauseBtn = this.add.text(padX, 10, '❚❚ PAUSE', {
+      fontFamily: 'VCR', fontSize: '18px', color: '#f0e6d3'
+    }).setInteractive({ useHandCursor: true });
     
-    // Lowered Y to natively avoid cutting off the top edge of CH1 label
-    const infoBoxY = 32;
+    // Wire up pause click!
+    pauseBtn.on('pointerdown', () => {
+      // Find the GameScreen object by tapping into state or dispatching global
+      const stateObj = require('../utils/StateManager.js').state;
+      stateObj.emit('game:pause');
+    });
 
-    // 1. Info Box
+    // TIME
+    this.add.text(padX + 90, 2, 'TIME:', {
+      fontFamily: 'VCR', fontSize: '14px', color: '#a89b8c'
+    });
+    this.timerText = this.add.text(padX + 90, 16, '00:00', {
+      fontFamily: 'VCR', fontSize: '20px', color: '#f0e6d3'
+    });
+
+    // Score
+    this.add.text(padX + 170, 2, 'SCORE:', {
+      fontFamily: 'VCR', fontSize: '14px', color: '#a89b8c'
+    });
+    this.scoreText = this.add.text(padX + 170, 16, '0', {
+      fontFamily: 'VCR', fontSize: '20px', color: '#ffd700'
+    });
+
+    // Hearts (top right of left panel)
+    this.hearts = [];
+    const heartStartX = leftWidth - padX - (2 * 26);
+    for (let i = 0; i < 3; i++) {
+      // Render the full heart by default (frame 147)
+      const heart = this.add.sprite(heartStartX + (i * 26), 20, 'ui_buttons', 147);
+      heart.setScale(2.0).setOrigin(0.5, 0.5);
+      this.hearts.push(heart);
+    }
+
+    // ========== BOSS DISPLAY BOX (blue border per wireframe) ==========
+    const boxPadX = 20;
+    const bossBoxY = 44;
+    const bossBoxW = leftWidth - boxPadX * 2;
+    const remainingHeight = height - 44;
+    const bossBoxH = Math.floor(remainingHeight * 0.55);
+
+    // Box background
     this.panelBg.fillStyle(0x151530, 1);
-    this.panelBg.fillRect(padX, infoBoxY, boxSize, boxSize);
-    this.panelBg.lineStyle(4, 0x4a4e69, 1);
-    this.panelBg.strokeRect(padX, infoBoxY, boxSize, boxSize);
+    this.panelBg.fillRect(boxPadX, bossBoxY, bossBoxW, bossBoxH);
+    // Blue border per wireframe
+    this.panelBg.lineStyle(3, 0x3a86c8, 1);
+    this.panelBg.strokeRect(boxPadX, bossBoxY, bossBoxW, bossBoxH);
 
-    // 1. CH1 Title as a label safely outside and above the Top Box
-    this.chapterText = this.add.text(padX, infoBoxY - 20, `CH ${this.chapterId}`, {
-      fontFamily: 'VCR', fontSize: '16px', color: '#ffd700'
-    });
+    // Chapter label
+    this.add.text(boxPadX, bossBoxY - 4, `CH ${this.chapterId}`, {
+      fontFamily: 'VCR', fontSize: '14px', color: '#ffd700'
+    }).setOrigin(0, 1);
 
-    // 2. Boss Portrait inside
-    // Takes precisely 75% of the box dimensions seamlessly!
-    const innerPad = 10;
-    const portraitSize = Math.floor(boxSize * 0.75); // Exactly 75% of height and width
-    const portraitX = padX + innerPad;
-    const portraitY = infoBoxY + innerPad;
+    // *** BOSS ANIMATED SPRITE — rendered HERE in HUDScene so it's visible ***
+    // The boss_duende spritesheet was loaded by GameScene's preload.
+    // HUDScene can access it because both scenes share the same Phaser.Game texture cache.
+    const bossCenterX = boxPadX + bossBoxW / 2;
+    const bossCenterY = bossBoxY + bossBoxH / 2;
     
-    this.panelBg.fillStyle(0x0a0a1a, 1);
-    this.panelBg.fillRect(portraitX, portraitY, portraitSize, portraitSize);
-    this.panelBg.lineStyle(2, 0x4a4e69, 1);
-    this.panelBg.strokeRect(portraitX, portraitY, portraitSize, portraitSize);
+    this.bossSprite = this.add.sprite(bossCenterX, bossCenterY, 'boss_duende');
+    // Scale to fit within the box (use the smaller dimension)
+    const fitScale = Math.min((bossBoxW - 10) / 848, (bossBoxH - 10) / 832);
+    this.bossSprite.setScale(fitScale);
+    this.bossSprite.setOrigin(0.5, 0.5);
 
-    if (this.scene.manager.keys['GameScene']) {
-      const bossKey = this.chapterId === 1 ? 'boss_redcap' : 'boss_redcap';
-      const bossImg = this.add.image(portraitX + portraitSize / 2, portraitY + portraitSize / 2, bossKey);
-      bossImg.setDisplaySize(portraitSize - 4, portraitSize - 4);
+    // Create boss animations
+    if (!this.anims.exists('boss_idle')) {
+      this.anims.create({
+        key: 'boss_idle',
+        frames: this.anims.generateFrameNumbers('boss_duende', { start: 0, end: 1 }),
+        frameRate: 3,
+        repeat: -1
+      });
+      this.anims.create({
+        key: 'boss_attack',
+        frames: this.anims.generateFrameNumbers('boss_duende', { start: 2, end: 5 }),
+        frameRate: 8,
+        repeat: 0
+      });
     }
 
-    // 3. Text Grouping (LIFE, POWERUP tightly tucked below portrait to use remaining bottom strip)
-    // Retain strict font limits ensuring 0 layout shifts.
-    const availableTextHeight = boxSize - portraitSize - (innerPad * 2);
-    const lineHeight = availableTextHeight / 2; // Split remaining vertical height
-    const gapRatio = 0.2; 
-    const maxFontByHeight = Math.floor(lineHeight * (1 - gapRatio));
-    
-    // Total available bottom row width spans the full inner width roughly.
-    // 13 characters for "POWERUP: NONE". Using strict font width constraint.
-    const availableTextWidth = boxSize - (innerPad * 2);
-    const maxFontByWidth = Math.floor(availableTextWidth / (13 * 0.65)); 
-    
-    const fontSizeNum = Math.floor(Math.min(maxFontByHeight, maxFontByWidth));
-    const fontSize = `${fontSizeNum}px`;
-    
-    // Centered vertically in the bottom strip tucked beneath the portrait
-    const startY = portraitY + portraitSize + Math.floor((lineHeight - fontSizeNum) / 2);
-    const textX = padX + innerPad; // flush left below portrait
-    
-    // Grouped compactly on remaining space (stacked vertically, compactly tucked)
-    this.lifeText = this.add.text(textX, startY, 'LIFE: ♥ ♥ ♥', {
-      fontFamily: 'VCR', fontSize: fontSize, color: '#cadc9f'
+    this.bossSprite.play('boss_idle');
+
+    // Gentle float animation
+    this.tweens.add({
+      targets: this.bossSprite,
+      y: bossCenterY - 6,
+      yoyo: true,
+      repeat: -1,
+      duration: 1200,
+      ease: 'Sine.easeInOut'
     });
 
-    // Place Powerup text compactly directly beneath it in the remaining strip
-    // Wait, wait! The original replaced block also needs to leave the newly placed SCORE text rendering untouched!
-    // I am avoiding replacing the SCORE by stopping this replacement chunk HERE.
+    // ========== HP BAR ==========
+    const hpBarY = bossBoxY + bossBoxH + 8;
+    const hpBarH = 10;
+    this.hpBarBg = this.add.graphics();
+    this.hpBarBg.fillStyle(0x333333, 1);
+    this.hpBarBg.fillRect(boxPadX, hpBarY, bossBoxW, hpBarH);
+    this.hpBarFill = this.add.graphics();
+    this.hpBarFill.fillStyle(0xe63946, 1);
+    this.hpBarFill.fillRect(boxPadX, hpBarY, bossBoxW, hpBarH);
+    this.hpBarWidth = bossBoxW;
+    this.hpBarX = boxPadX;
+    this.hpBarY = hpBarY;
+    this.hpBarH = hpBarH;
 
-    // Relocated Score (Top right corner, neatly under PAUSE button)
-    this.scoreText = this.add.text(width - Math.max(25, width * 0.04), 70, 'SCORE: 0', {
-      fontFamily: 'VCR', fontSize: '28px', color: '#ffd700', align: 'right', stroke: '#000000', strokeThickness: 4
-    }).setOrigin(1, 0);
-
-    // Place Powerup text compactly directly beneath it in the remaining strip
-    this.powerupText = this.add.text(textX, startY + lineHeight, 'POWERUP: NONE', {
-      fontFamily: 'VCR', fontSize: fontSize, color: '#cadc9f'
+    // Powerup label
+    const labelY = hpBarY + hpBarH + 10;
+    this.add.text(boxPadX, labelY, 'POWERUP: NONE', {
+      fontFamily: 'VCR', fontSize: '11px', color: '#cadc9f'
     });
+
+    // ========== CAMERA BOX (bottom of left panel) ==========
+    const camBoxH = Math.floor(remainingHeight * 0.30);
+    const camBoxY = height - camBoxH - boxPadX;
     
-    // Bottom Box position (at the bottom of the screen with symmetric padding)
-    const paddingBottom = 28; // Matched perfectly with top padX for absolute vertical framing balance
-    const cameraBoxY = height - boxSize - paddingBottom;
-
-    // 3. Sync DOM Timer (Top left of right panel, mirroring PAUSE CSS style exactly)
-    const domTimer = document.getElementById('game-timer-dom');
-    if (domTimer) {
-      // Anchor dynamically to right of HUD dividing panel with identical var(--space-md) margin mapping
-      const spacingToLine = Math.max(16, width * 0.02); 
-      domTimer.style.left = `${leftWidth + spacingToLine}px`;
-    }
-
-    // 4. Camera View Box Placeholder
     this.panelBg.fillStyle(0x151530, 1);
-    this.panelBg.fillRect(padX, cameraBoxY, boxSize, boxSize);
-    this.panelBg.lineStyle(4, 0x4a4e69, 1);
-    this.panelBg.strokeRect(padX, cameraBoxY, boxSize, boxSize);
+    this.panelBg.fillRect(boxPadX, camBoxY, bossBoxW, camBoxH);
+    this.panelBg.lineStyle(3, 0x4a4e69, 1);
+    this.panelBg.strokeRect(boxPadX, camBoxY, bossBoxW, camBoxH);
 
-    // Bind PIP webcam directly over the Camera View Box
+    // Position DOM camera PiP over the camera box
     const pip = document.getElementById('game-camera-pip');
     if (pip) {
-      pip.style.left = `${padX + 2}px`;
-      pip.style.top = `${cameraBoxY + 2}px`;
-      pip.style.width = `${boxSize - 4}px`;
-      pip.style.height = `${boxSize - 4}px`;
-      pip.style.bottom = 'auto'; // Remove bottom pin
-      pip.style.borderRadius = '0px'; 
-      pip.style.aspectRatio = '1 / 1';
+      pip.style.left = `${boxPadX + 2}px`;
+      pip.style.top = `${camBoxY + 2}px`;
+      pip.style.width = `${bossBoxW - 4}px`;
+      pip.style.height = `${camBoxH - 4}px`;
+      pip.style.bottom = 'auto';
+      pip.style.borderRadius = '0px';
       pip.style.border = 'none';
       pip.style.boxShadow = 'none';
     }
+
+    // Hide duplicate DOM timer (we use Phaser text)
+    const domTimer = document.getElementById('game-timer-dom');
+    if (domTimer) domTimer.style.display = 'none';
+
+    // Listen for boss attack events from GameScene
+    const gameScene = this.scene.get('GameScene');
+    if (gameScene) {
+      gameScene.events.on('boss:attack', () => this.playBossAttack());
+      gameScene.events.on('boss:damaged', (current, max) => this.updateBossHp(current, max));
+      gameScene.events.on('boss:died', () => this.onBossDied());
+    }
+  }
+
+  playBossAttack() {
+    if (!this.bossSprite) return;
+    this.bossSprite.play('boss_attack');
+    this.bossSprite.once('animationcomplete', () => {
+      this.bossSprite.play('boss_idle');
+    });
+  }
+
+  onBossDied() {
+    if (!this.bossSprite) return;
+    this.bossSprite.setTint(0xff0000);
+    this.tweens.add({
+      targets: this.bossSprite,
+      scaleX: 0, scaleY: 0, alpha: 0,
+      duration: 500
+    });
   }
 
   updateScore(score) {
-    this.scoreText.setText(`SCORE: ${score}`);
+    if (this.scoreText) this.scoreText.setText(`${score}`);
   }
 
   updateLives(lives) {
-    let hearts = '';
-    for(let i=0; i<Math.floor(lives/2); i++) hearts += '♥ ';
-    if (lives % 2 === 1) hearts += '♡ ';
-    this.lifeText.setText(hearts);
+    if (!this.hearts) return;
+    for (let i = 0; i < 3; i++) {
+        // Frame indexes: 147 (full), 146 (half), 145 (empty)
+        let frame = 145; 
+        if (lives >= (i + 1) * 2) {
+            frame = 147; 
+        } else if (lives === (i * 2) + 1) {
+            frame = 146; 
+        }
+        if (this.hearts[i]) {
+            this.hearts[i].setFrame(frame);
+        }
+    }
+  }
+
+  updateBossHp(current, max) {
+    if (!this.hpBarFill) return;
+    this.hpBarFill.clear();
+    const ratio = Math.max(0, current / max);
+    this.hpBarFill.fillStyle(ratio > 0.3 ? 0xe63946 : 0xff4444, 1);
+    this.hpBarFill.fillRect(this.hpBarX, this.hpBarY, this.hpBarWidth * ratio, this.hpBarH);
   }
 
   update(time, delta) {
@@ -156,10 +233,8 @@ export class HUDScene extends Phaser.Scene {
     const seconds = Math.floor(this.elapsed / 1000);
     const minutes = Math.floor(seconds / 60);
     const displaySecs = seconds % 60;
-    
-    const domTimer = document.getElementById('game-timer-dom');
-    if (domTimer) {
-      domTimer.innerText = `${minutes.toString().padStart(2, '0')}:${displaySecs.toString().padStart(2, '0')}`;
+    if (this.timerText) {
+      this.timerText.setText(`${minutes.toString().padStart(2, '0')}:${displaySecs.toString().padStart(2, '0')}`);
     }
   }
 }

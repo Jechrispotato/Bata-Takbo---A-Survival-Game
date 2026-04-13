@@ -14,6 +14,7 @@ import { Leaderboard } from './screens/Leaderboard.js';
 import { About } from './screens/About.js';
 import { GameScreen } from './screens/GameScreen.js';
 import { ResultsScreen } from './screens/ResultsScreen.js';
+import { gestureController } from './gesture/GestureController.js';
 
 // Initialize screen manager
 const screenManager = new ScreenManager('screen-container');
@@ -37,6 +38,13 @@ async function init() {
   // Small delay for font loading
   await document.fonts.ready;
   
+  // Proactively load the gesture model from IndexedDB into memory
+  try {
+    await gestureController.initialize(null, null);
+  } catch (e) {
+    console.warn('Gesture controller background initialization error:', e);
+  }
+
   // Navigate to main menu
   await screenManager.navigate('main-menu', {}, false);
   

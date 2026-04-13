@@ -9,37 +9,39 @@ export class Player {
     this.scene = scene;
     this.grid = grid;
 
-    // Start at bottom center (assuming 7 columns, so col 3 is center. Row 8 is bottom for 9 rows)
+    // Start at bottom center
     this.col = Math.floor(grid.cols / 2);
     this.row = grid.rows - 1;
     this.isMoving = false;
+    this.facing = 'down';
     
-    this.hp = 6; // 6 hits equal 3 full hearts
+    this.hp = 6;
     this.maxHp = 6;
     this.isInvulnerable = false;
 
     const startPos = this.grid.getPixelPosition(this.col, this.row);
     
-    // Add sprite
-    this.sprite = this.scene.add.sprite(startPos.x, startPos.y, 'player_idle');
-    this.sprite.setScale(1.5);
-    // Origin bottom center helps with grid alignment
-    this.sprite.setOrigin(0.5, 0.8);
+    // Sprite strips are 384x64 = 8 frames of 48x64 each
+    this.sprite = this.scene.add.sprite(startPos.x, startPos.y, 'player_idle_down');
+    
+    // Scale to fit within a tile (use tileSize relative to the 48px frame width)
+    const scale = (grid.tileSize * 1.4) / 48;
+    this.sprite.setScale(scale);
+    this.sprite.setOrigin(0.5, 0.75); // Bottom-center anchor
 
-    // Create animations if they don't exist globally
+    // Create directional animations — 8 frames each (0 to 7)
     if (!this.scene.anims.exists('idle_down')) {
-      this.scene.anims.create({
-        key: 'idle_down',
-        frames: this.scene.anims.generateFrameNumbers('player_idle', { start: 0, end: 5 }),
-        frameRate: 8,
-        repeat: -1
-      });
-      this.scene.anims.create({
-        key: 'dash_anim',
-        frames: this.scene.anims.generateFrameNumbers('player_dash', { start: 0, end: 5 }),
-        frameRate: 15,
-        repeat: 0
-      });
+      // Idle animations
+      this.scene.anims.create({ key: 'idle_down', frames: this.scene.anims.generateFrameNumbers('player_idle_down', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.scene.anims.create({ key: 'idle_up', frames: this.scene.anims.generateFrameNumbers('player_idle_up', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.scene.anims.create({ key: 'idle_left', frames: this.scene.anims.generateFrameNumbers('player_idle_left', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.scene.anims.create({ key: 'idle_right', frames: this.scene.anims.generateFrameNumbers('player_idle_right', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      
+      // Dash animations
+      this.scene.anims.create({ key: 'dash_down', frames: this.scene.anims.generateFrameNumbers('player_dash_down', { start: 0, end: 7 }), frameRate: 20, repeat: 0 });
+      this.scene.anims.create({ key: 'dash_up', frames: this.scene.anims.generateFrameNumbers('player_dash_up', { start: 0, end: 7 }), frameRate: 20, repeat: 0 });
+      this.scene.anims.create({ key: 'dash_left', frames: this.scene.anims.generateFrameNumbers('player_dash_left', { start: 0, end: 7 }), frameRate: 20, repeat: 0 });
+      this.scene.anims.create({ key: 'dash_right', frames: this.scene.anims.generateFrameNumbers('player_dash_right', { start: 0, end: 7 }), frameRate: 20, repeat: 0 });
     }
 
     this.sprite.play('idle_down');
@@ -48,9 +50,7 @@ export class Player {
   move(direction) {
     if (this.isMoving) return;
 
-    let dCol = 0;
-    let dRow = 0;
-
+    let dCol = 0, dRow = 0;
     if (direction === 'up') dRow = -1;
     else if (direction === 'down') dRow = 1;
     else if (direction === 'left') dCol = -1;
@@ -60,33 +60,28 @@ export class Player {
     const targetCol = this.col + dCol;
     const targetRow = this.row + dRow;
 
-    // Bounds checking
     if (targetCol < 0 || targetCol >= this.grid.cols) return;
     if (targetRow < 0 || targetRow >= this.grid.rows) return;
 
     this.isMoving = true;
+    this.facing = direction;
     this.col = targetCol;
     this.row = targetRow;
 
     const targetPos = this.grid.getPixelPosition(this.col, this.row);
 
-    // Play dash animation and flip appropriately
-    this.sprite.play('dash_anim');
-    if (dCol < 0) this.sprite.setFlipX(true);
-    else if (dCol > 0) this.sprite.setFlipX(false);
+    // Play directional dash animation
+    this.sprite.play(`dash_${direction}`);
 
-    // Smooth tween to new tile
     this.scene.tweens.add({
       targets: this.sprite,
       x: targetPos.x,
       y: targetPos.y,
-      duration: 150, // Fast snappy dodge action
+      duration: 150,
       ease: 'Power2',
       onComplete: () => {
         this.isMoving = false;
-        this.sprite.play('idle_down'); // Return to idle
-        
-        // Notify scene of our new position (to check for damage/powerup tiles)
+        this.sprite.play(`idle_${this.facing}`);
         this.scene.events.emit('player:moved', this.col, this.row);
       }
     });
@@ -102,14 +97,11 @@ export class Player {
       this.die();
       return;
     }
-
     this.toggleInvulnerability();
   }
 
   toggleInvulnerability() {
     this.isInvulnerable = true;
-    
-    // Flash sprite continuously to show invulnerability
     this.scene.tweens.add({
       targets: this.sprite,
       alpha: 0.3,
