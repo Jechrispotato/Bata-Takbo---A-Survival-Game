@@ -14,6 +14,7 @@ import { Leaderboard } from './screens/Leaderboard.js';
 import { About } from './screens/About.js';
 import { GameScreen } from './screens/GameScreen.js';
 import { ResultsScreen } from './screens/ResultsScreen.js';
+import { LoginScreen } from './screens/LoginScreen.js';
 import { gestureController } from './gesture/GestureController.js';
 
 // Initialize screen manager
@@ -32,8 +33,8 @@ screenManager.register('leaderboard', Leaderboard);
 screenManager.register('about', About);
 screenManager.register('game-screen', GameScreen);
 screenManager.register('results-screen', ResultsScreen);
+screenManager.register('login-screen', LoginScreen);
 
-// Hide loading overlay and show main menu
 async function init() {
   // Small delay for font loading
   await document.fonts.ready;
@@ -45,8 +46,8 @@ async function init() {
     console.warn('Gesture controller background initialization error:', e);
   }
 
-  // Navigate to main menu
-  await screenManager.navigate('main-menu', {}, false);
+  // Navigate to login screen
+  await screenManager.navigate('login-screen', {}, false);
   
   // Hide loading overlay
   const loadingOverlay = document.getElementById('loading-overlay');

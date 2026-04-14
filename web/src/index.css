@@ -1299,3 +1299,123 @@ a {
     width: 500px;
   }
 }
+
+/* === LOGIN SCREEN === */
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+}
+
+.login-card__header {
+  text-align: center;
+}
+
+.login-card__title {
+  margin-bottom: var(--space-xs) !important;
+}
+
+.login-card__subtitle {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.login-card__divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 107, 26, 0.3),
+    transparent
+  );
+  margin: var(--space-xs) 0;
+}
+
+.login-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.login-card__input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 107, 26, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: border-color var(--transition-normal);
+  text-align: center;
+}
+
+.login-card__input::placeholder {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+.login-card__input:focus {
+  border-color: var(--accent-orange);
+  background: rgba(255, 107, 26, 0.05);
+}
+
+.login-card__privacy {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}
+
+.login-card__footer {
+  width: 100%;
+}
+
+.login-card__join-btn {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--accent-orange);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.login-card__join-btn:hover {
+  background: var(--accent-orange-bright);
+  box-shadow: var(--glow-orange);
+  transform: translateY(-2px);
+}
+
+.login-card__join-btn:active {
+  transform: translateY(0);
+}
+
+.login-card__footer--split {
+  display: flex;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.login-card__footer--split .login-card__join-btn {
+  flex: 1;
+  padding: var(--space-md) var(--space-xs);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+}

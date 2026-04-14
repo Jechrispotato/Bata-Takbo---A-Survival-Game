@@ -13,5 +13,8 @@ export default defineConfig({
     host: true,
     port: 5173,
     open: true,
+    proxy: {
+      '/auth': 'http://localhost:3001'
+    }
   },
 });
