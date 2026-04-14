@@ -83,7 +83,7 @@ export class Boss {
       this.grid.telegraph(t.c, t.r, 1500);
       this.scene.time.delayedCall(1500, () => {
         if (this.hp > 0) {
-          new Projectile(this.scene, this.grid, this.projectileOriginX, this.projectileOriginY, t.c, t.r);
+          new Projectile(this.scene, this.grid, t.c, t.r);
         }
       });
     });

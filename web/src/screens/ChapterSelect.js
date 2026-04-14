@@ -19,21 +19,31 @@ export const ChapterSelect = {
       const isUnlocked = unlocked.includes(ch.id);
       
       const content = isUnlocked 
-        ? `\n      <button class="chapter-card__play text-btn" style="--accent: ${ch.accent};" data-chapter="${ch.id}">PLAY</button>`
-        : `\n      <span class="chapter-card__lock-text">LOCKED</span>`;
+        ? `\n      <button class="chapter-card__play text-btn" data-chapter="${ch.id}">PLAY</button>`
+        : `\n      <span class="chapter-card__lock-text">🔒 LOCKED</span>`;
 
       return `
         <div class="chapter-card ${isUnlocked ? '' : 'locked'}" 
              data-chapter="${ch.id}" 
              id="chapter-card-${ch.id}"
-             style="animation: scaleIn 0.5s ease forwards; animation-delay: ${i * 0.15}s; opacity: 0; --card-accent: ${ch.accent};">
+             style="animation: scaleIn 0.5s ease forwards; animation-delay: ${i * 0.15}s; opacity: 0; ${isUnlocked ? '' : 'pointer-events: none;'}">
+          ${isUnlocked ? '<div class="card-mist-bg"></div>' : ''}
           <img src="${isUnlocked ? ch.img : '/assets/ui/chapters/locked-chapter.png'}" alt="${ch.name}" class="chapter-card__img" />
-          <div class="chapter-card__info">
-            <span class="chapter-card__number">${ch.chapterText}</span>
-            <span class="chapter-card__title">${ch.name}</span>
-          </div>
-          <div class="chapter-card__action">
-            ${content}
+          <div class="chapter-card__inner-shadow"></div>
+          
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
+          
+          <div class="chapter-card__bottom-bar">
+            <div class="chapter-card__info">
+              <span class="chapter-card__number">${ch.chapterText}</span>
+              <span class="chapter-card__title">${ch.name}</span>
+            </div>
+            <div class="chapter-card__action">
+              ${content}
+            </div>
           </div>
         </div>
       `;
@@ -41,6 +51,8 @@ export const ChapterSelect = {
 
     return `
       <div class="chapter-select screen">
+        <div class="ambient-stars"></div>
+        <div class="ambient-glow"></div>
         <button class="back-btn" id="btn-ch-back">Back</button>
         <button class="menu-btn" id="btn-test-lock" style="position: absolute; top: var(--space-lg); right: var(--space-lg); font-size: 14px; padding: 10px;">TEST ANIMATION UNLOCK</button>
         

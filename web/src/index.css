@@ -389,7 +389,7 @@ a {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   color: var(--accent-orange);
-  text-shadow: var(--glow-orange-strong);
+  text-shadow: 4px 4px 0px #000;
   text-align: center;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -637,53 +637,78 @@ a {
   align-items: center;
   justify-content: center;
   background: var(--bg-primary);
+  background-image: radial-gradient(circle at center, rgba(0, 255, 136, 0.05) 0%, transparent 60%);
   padding: var(--space-xl);
+  overflow: hidden;
+}
+
+.ambient-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw; height: 80vh;
+  background: radial-gradient(circle, rgba(0, 255, 136, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-stars {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  box-shadow: 
+    15vw 25vh 0 1px rgba(255,255,255,0.2), 
+    85vw 35vh 0 1px rgba(255,255,255,0.1),
+    20vw 75vh 0 1px rgba(255,255,255,0.1),
+    75vw 65vh 0 1px rgba(255,255,255,0.2),
+    45vw 20vh 0 1px rgba(255,255,255,0.15);
 }
 
 .chapter-select__cards {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-xl);
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   margin-top: var(--space-lg);
+  z-index: 2;
 }
 
 .chapter-card {
   position: relative;
-  width: clamp(240px, 40vw, 400px);
-  aspect-ratio: 3 / 4; /* Force a consistent portrait ratio for the image BG */
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  width: clamp(240px, 35vw, 360px);
+  aspect-ratio: 1728 / 2454;
+  border-radius: 0;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  border: 4px solid var(--card-accent, var(--accent-orange));
-  box-shadow: 0 0 15px var(--card-accent, var(--accent-orange));
-  background: var(--bg-secondary);
-}
-
-.chapter-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; width: 100%; height: 50%;
-  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-  z-index: 1;
+  background: var(--bg-primary);
+  border: 3px solid #00ff88;
+  animation: pulseGreenBorder 3s infinite alternate;
+  box-shadow: 0 10px 0 rgba(0,0,0,0.8);
+  transition: transform var(--transition-fast);
 }
 
 .chapter-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 0 35px var(--card-accent, var(--accent-orange));
+  transform: translateY(-4px);
 }
 
 .chapter-card.locked {
   cursor: not-allowed;
-  filter: brightness(0.8);
+  border: 3px solid #444;
+  animation: none;
+  background: #1a1a2e;
 }
 
 .chapter-card.locked:hover {
   transform: none;
-  border-color: rgba(255, 107, 26, 0.2);
-  box-shadow: none;
+}
+
+.card-mist-bg {
+  position: absolute;
+  top: 10%; left: -20%; right: -20%; bottom: -10%;
+  background: radial-gradient(ellipse at bottom, rgba(0,255,136,0.1) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .chapter-card__img {
@@ -691,29 +716,65 @@ a {
   height: 100%;
   object-fit: cover;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   z-index: 0;
 }
 
-.chapter-card__info {
+.chapter-card__inner-shadow {
   position: absolute;
-  bottom: calc(var(--space-md) + 50px);
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.corner {
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 3px solid #ffd700;
+  z-index: 2;
+}
+.chapter-card.locked .corner { border-color: #444; }
+
+.corner.top-left { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+.corner.top-right { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+.corner.bottom-left { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+.corner.bottom-right { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+
+.chapter-card__bottom-bar {
+  position: absolute;
+  bottom: 0;
   left: 0;
   width: 100%;
-  z-index: 2;
+  height: 35%;
+  background: rgba(10, 10, 26, 0.85);
+  border-top: 2px solid #00ff88;
+  z-index: 3;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   text-align: center;
+}
+.chapter-card.locked .chapter-card__bottom-bar {
+  border-top: 2px solid #444;
+}
+
+.chapter-card__info {
+  margin-bottom: var(--space-md);
+  display: flex;
+  flex-direction: column;
 }
 
 .chapter-card__number {
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  color: var(--card-accent, var(--accent-orange));
+  font-size: var(--text-xs);
+  color: #ff6a00;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+  text-shadow: 2px 2px 0px #000;
+}
+.chapter-card.locked .chapter-card__number {
+  color: #6a7a6a;
 }
 
 .chapter-card__title {
@@ -721,44 +782,52 @@ a {
   font-size: var(--text-2xl);
   color: #fff;
   line-height: 1.1;
-  text-shadow: 0 0 8px rgba(0,0,0,1);
+  text-shadow: 2px 2px 0px #000;
+  margin-top: 4px;
+}
+.chapter-card.locked .chapter-card__title {
+  color: #888;
+  font-style: italic;
 }
 
 .chapter-card__action {
-  position: absolute;
-  bottom: var(--space-md);
   width: 100%;
   display: flex;
   justify-content: center;
-  z-index: 2;
 }
 
-/* Card Button Override matching menu-btn */
-.chapter-card__play.text-btn {
+.chapter-card__play {
   font-family: var(--font-ui);
-  font-size: var(--text-lg);
-  color: rgba(255,255,255,0.8);
-  letter-spacing: 2px;
+  font-size: var(--text-md);
+  color: #0a0a1a;
+  background: #00ff88;
+  padding: 6px 20px;
+  border: 2px solid #000;
+  box-shadow: 0 4px 0 #000;
   text-transform: uppercase;
-  background: transparent;
-  border: none;
+  letter-spacing: 2px;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  text-shadow: 0 0 8px rgba(0,0,0,1);
+  transition: transform 0.1s;
+}
+.chapter-card__play:hover {
+  background: #33ffaa;
+}
+.chapter-card__play:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #000;
 }
 
-.chapter-card__play.text-btn:hover {
-  color: var(--card-accent, var(--accent-orange));
-  text-shadow: 0 0 15px var(--card-accent, var(--accent-orange));
-  transform: scale(1.1);
-}
-
-/* Replaced Lock animation with pure text styling */
 .chapter-card__lock-text {
   font-family: var(--font-ui);
-  font-size: var(--text-lg);
-  color: var(--text-dim);
-  letter-spacing: 4px;
+  font-size: var(--text-sm);
+  color: #777;
+  letter-spacing: 3px;
+  text-shadow: 1px 1px 0px #000;
+}
+
+@keyframes pulseGreenBorder {
+  0% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.4), 0 10px 0 rgba(0,0,0,0.8); }
+  100% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.8), 0 10px 0 rgba(0,0,0,0.8); }
 }
 
 /* === SETTINGS SCREEN === */

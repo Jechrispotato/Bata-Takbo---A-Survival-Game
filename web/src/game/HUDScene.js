@@ -177,7 +177,10 @@ export class HUDScene extends Phaser.Scene {
     const gameScene = this.scene.get('GameScene');
     if (gameScene) {
       gameScene.events.on('boss:attack', () => this.playBossAttack());
-      gameScene.events.on('boss:damaged', (current, max) => this.updateBossHp(current, max));
+      gameScene.events.on('boss:damaged', (current, max) => {
+        this.updateBossHp(current, max);
+        this.playBossDamageVfx();
+      });
       gameScene.events.on('boss:died', () => this.onBossDied());
     }
   }
@@ -187,6 +190,25 @@ export class HUDScene extends Phaser.Scene {
     this.bossSprite.play('boss_attack');
     this.bossSprite.once('animationcomplete', () => {
       this.bossSprite.play('boss_idle');
+    });
+  }
+
+  playBossDamageVfx() {
+    if (!this.bossSprite) return;
+    
+    // Spawn the explosion right over the boss sprite in the HUD
+    const explosion = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'stylized_explosion');
+    explosion.setScale(4.0).setDepth(200); // Scale up for massive impact
+    explosion.play('anim_stylized_explosion');
+    
+    // Dynamic flash tint to show pain
+    this.bossSprite.setTint(0xffffff);
+    this.time.delayedCall(100, () => this.bossSprite.setTint(0xff0000));
+    this.time.delayedCall(200, () => this.bossSprite.setTint(0xffffff));
+    this.time.delayedCall(300, () => this.bossSprite.clearTint());
+
+    explosion.on('animationcomplete', () => {
+      explosion.destroy();
     });
   }
 

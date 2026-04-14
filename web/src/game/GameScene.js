@@ -41,6 +41,9 @@ export class GameScene extends Phaser.Scene {
 
     // FX
     this.load.spritesheet('fx_damage', '/assets/gui/GenericSparks/GenericSparks-Sheet.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('symbol_alert', '/assets/fx/symbol_alert.png', { frameWidth: 80, frameHeight: 80 });
+    this.load.spritesheet('lightning_burst', '/assets/fx/lightning_burst.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('stylized_explosion', '/assets/fx/stylized_explosion.png', { frameWidth: 96, frameHeight: 96 });
   }
 
   create() {
@@ -55,6 +58,12 @@ export class GameScene extends Phaser.Scene {
     // 3. Initialize Boss (attack logic only — sprite lives in HUDScene)
     this.boss = new Boss(this, this.grid);
     this.goldenTile = null;
+
+    if (!this.anims.exists('anim_symbol_alert')) {
+      this.anims.create({ key: 'anim_symbol_alert', frames: this.anims.generateFrameNumbers('symbol_alert'), frameRate: 20, repeat: 0 });
+      this.anims.create({ key: 'anim_lightning_burst', frames: this.anims.generateFrameNumbers('lightning_burst'), frameRate: 20, repeat: 0 });
+      this.anims.create({ key: 'anim_stylized_explosion', frames: this.anims.generateFrameNumbers('stylized_explosion'), frameRate: 24, repeat: 0 });
+    }
 
     // --- GAME LOGIC EVENTS ---
     
@@ -96,6 +105,14 @@ export class GameScene extends Phaser.Scene {
     this.events.on('boss:attack', () => {
       const hud = this.scene.get('HUDScene');
       if (hud && hud.playBossAttack) hud.playBossAttack();
+
+      // Spawn alert over player
+      if (this.player && this.player.sprite) {
+        const alertSpr = this.add.sprite(this.player.sprite.x, this.player.sprite.y - 60, 'symbol_alert');
+        alertSpr.setScale(1.2).setDepth(200);
+        alertSpr.play('anim_symbol_alert');
+        alertSpr.once('animationcomplete', () => alertSpr.destroy());
+      }
     });
 
     this.events.on('player:died', () => this.showGameOver(false));

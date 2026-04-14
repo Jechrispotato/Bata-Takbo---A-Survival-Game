@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 
 export class Projectile {
-  constructor(scene, grid, startX, startY, targetCol, targetRow) {
+  constructor(scene, grid, targetCol, targetRow) {
     this.scene = scene;
     this.grid = grid;
     this.targetCol = targetCol;
@@ -14,24 +14,19 @@ export class Projectile {
     const types = ['projectile_1', 'projectile_2', 'projectile_3'];
     const chosen = types[Phaser.Math.Between(0, 2)];
 
+    // Spawn directly above target tile
+    const startX = targetPos.x;
+    const startY = grid.offsetY - 50;
+
     this.sprite = scene.add.sprite(startX, startY, chosen);
-    this.sprite.setScale(0.6);
+    this.sprite.setScale(2.0); // Scaled up!
 
-    // Arc motion setup
-    // Animate X linearly
-    scene.tweens.add({
-      targets: this.sprite,
-      x: targetPos.x,
-      duration: 600,
-      ease: 'Linear'
-    });
-
-    // Animate Y with a bounce/arc
+    // Animate Y dropping straight down
     scene.tweens.add({
       targets: this.sprite,
       y: targetPos.y,
       duration: 600,
-      ease: 'Sine.easeIn',
+      ease: 'Linear',
       onComplete: () => {
         this.land();
       }
@@ -47,24 +42,13 @@ export class Projectile {
   }
 
   land() {
-    // Flash impact visual on the grid using Sparks pixel art
+    // Flash impact visual on the grid using Lightning Burst
     const targetPos = this.grid.getPixelPosition(this.targetCol, this.targetRow);
-    const impact = this.scene.add.sprite(targetPos.x, targetPos.y, 'fx_damage');
-    // Random rotation for variety
-    impact.setAngle(Phaser.Math.Between(0, 360));
-    impact.setScale(1.5);
+    const impact = this.scene.add.sprite(targetPos.x, targetPos.y, 'lightning_burst');
     
-    // Create animation on the fly if it doesn't exist
-    if (!this.scene.anims.exists('spark_anim')) {
-      this.scene.anims.create({
-        key: 'spark_anim',
-        frames: this.scene.anims.generateFrameNumbers('fx_damage', { start: 0, end: 5 }), // guessing length, safe fallback
-        frameRate: 20,
-        repeat: 0
-      });
-    }
-
-    impact.play('spark_anim');
+    // Scale the burst to cover the tile nicely
+    impact.setScale(1.8).setDepth(150);
+    impact.play('anim_lightning_burst');
     impact.on('animationcomplete', () => {
       impact.destroy();
     });

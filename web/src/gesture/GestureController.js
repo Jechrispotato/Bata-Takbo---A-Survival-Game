@@ -58,9 +58,11 @@ class GestureController {
     
     // Update config from state
     const settings = state.get('settings');
-    this.handDetector.setPrivacyMode(settings.camera.privacyMode);
-    this.handDetector.setShowSkeleton(settings.camera.showSkeleton);
-    this.handDetector.onResults(this._handleDetection.bind(this));
+    if (this.handDetector) {
+      this.handDetector.setPrivacyMode(settings.camera.privacyMode);
+      this.handDetector.setShowSkeleton(settings.camera.showSkeleton);
+      this.handDetector.onResults(this._handleDetection.bind(this));
+    }
   }
 
   /**
