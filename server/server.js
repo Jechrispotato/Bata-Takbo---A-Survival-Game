@@ -21,10 +21,10 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Rate Limiting: 5 requests per minute for auth endpoints
+// Rate Limiting: 25 requests per minute for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 25,
   message: { error: 'Too many requests. Try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -33,31 +33,6 @@ const authLimiter = rateLimit({
 app.use('/auth', authLimiter);
 
 let db;
-
-// CSRF Double Submit Cookie Implementation
-app.get('/auth/csrf', (req, res) => {
-  const token = crypto.randomBytes(32).toString('hex');
-  res.cookie('csrf_token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false // Required true when enforcing fully onto PROD environments over HTTPS
-  });
-  // Provide token for frontend headers securely mapped matching the HttpCookie value silently
-  res.json({ csrfToken: token });
-});
-
-const csrfMiddleware = (req, res, next) => {
-  if (req.method === 'POST') {
-    const headerToken = req.headers['x-csrf-token'];
-    const cookieToken = req.cookies.csrf_token;
-    if (!headerToken || !cookieToken || headerToken !== cookieToken) {
-      return res.status(403).json({ error: 'Invalid or missing CSRF token.' });
-    }
-  }
-  next();
-};
-
-app.use('/auth', csrfMiddleware);
 
 // Basic validation for username
 // A-Z, a-z, 0-9, _, - and length 3-20

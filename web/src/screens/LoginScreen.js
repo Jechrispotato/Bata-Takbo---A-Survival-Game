@@ -154,13 +154,6 @@ export const LoginScreen = {
 
   async onEnter(el) {
     this.container = el;
-    try {
-      const res = await fetch('/auth/csrf', { credentials: 'include' });
-      const data = await res.json();
-      this.csrfToken = data.csrfToken;
-    } catch (e) {
-      console.error('Failed to initialize CSRF token connection.');
-    }
     this.bindUsernameEvents();
   },
 
@@ -246,8 +239,7 @@ export const LoginScreen = {
             method: 'POST',
             credentials: 'include',
             headers: { 
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': this.csrfToken || ''
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({ username })
           });
@@ -309,8 +301,7 @@ export const LoginScreen = {
           method: 'POST',
           credentials: 'include',
           headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': this.csrfToken || ''
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ username, password })
         });
@@ -320,7 +311,7 @@ export const LoginScreen = {
         if (res.ok && data.success) {
           sessionStorage.setItem('guest_session', JSON.stringify({ is_guest: false, username }));
           if (window.__screenManager) {
-            window.__screenManager.navigate('game-screen');
+            window.__screenManager.navigate('main-menu');
           }
         } else {
           errorMsg.textContent = data.error || 'Incorrect password. Try again.';
@@ -413,8 +404,7 @@ export const LoginScreen = {
           method: 'POST',
           credentials: 'include',
           headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': this.csrfToken || ''
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ username, password })
         });
@@ -424,7 +414,7 @@ export const LoginScreen = {
         if (res.ok && data.success) {
           sessionStorage.setItem('guest_session', JSON.stringify({ is_guest: false, username }));
           if (window.__screenManager) {
-            window.__screenManager.navigate('game-screen');
+            window.__screenManager.navigate('main-menu');
           }
         } else {
           errorMsg.textContent = data.error || 'Registration failed.';
