@@ -29,7 +29,7 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet('player_dash_right', '/assets/characters/male/dash/Dash_right_Down.png', { frameWidth: 48, frameHeight: 64 });
     
     // Boss sprite sheet — 5088x832, 6 frames of 848x832
-    this.load.spritesheet('boss_duende', '/assets/ui/duende-sprite.png', { frameWidth: 848, frameHeight: 832 });
+    this.load.spritesheet('boss_duende', '/assets/characters/boss/chapter-1/duende-sprite.png', { frameWidth: 848, frameHeight: 832 });
     
     // UI elements like Hearts
     this.load.spritesheet('ui_buttons', '/assets/ui/buttons.png', { frameWidth: 16, frameHeight: 16 });

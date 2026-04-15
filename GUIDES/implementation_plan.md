@@ -1166,7 +1166,7 @@ We are now entering Phase 3. The execution will be broken into the following seq
 - **Game Config:** Create the fundamental `Phaser.Game` configuration with `GameScene` and `HUDScene`.
 
 #### Step 3.2: Grid & Environment
-- **Grid Layout:** Write `Grid.js` to programmatically build the grid. The **logical tiles** (e.g. 7x9 or 5x5) will be strictly hardcoded per chapter so that NO device gains a gameplay advantage. Only the *visual pixel art size* will dynamically scale to fit the screen.
+- **Grid Layout:** Write `Grid.js` to programmatically build the grid. The **logical tiles** (e.g. 7x7 or 5x5) will be strictly hardcoded per chapter so that NO device gains a gameplay advantage. Only the *visual pixel art size* will dynamically scale to fit the screen.
 - **Tilesets:** Preload `mainlevbuild.png` to construct visually distinct safe/warning tiles.
 
 #### Step 3.3: Player Entity & Controls
