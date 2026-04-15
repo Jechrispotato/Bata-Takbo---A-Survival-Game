@@ -1,4 +1,47 @@
+# ============================================================
+# Bata, Takbo! — Root .gitignore
+# Covers the entire monorepo (root, /web, /server)
+# ============================================================
 
-server/node_modules/
+# ── Node dependencies (ALL subfolders) ──────────────────────
+node_modules/
+**/node_modules/
 
-database.sqlite
+# ── Build output ─────────────────────────────────────────────
+web/dist/
+web/dist-ssr/
+
+# ── Database files ───────────────────────────────────────────
+server/database.sqlite
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# ── Environment / Secrets ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+server/.env
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── OS / Editor junk ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ── Vite local config ────────────────────────────────────────
+*.local
