@@ -115,7 +115,9 @@ class GestureController {
   async _handleDetection(features, hasHand) {
     if (!hasHand) {
       this.currentGesture = 'idle';
-      if (this.isTesting) state.emit('gesture:detected', 'idle');
+      if (this.isTesting || state.get('currentScreen') === 'game') {
+        state.emit('gesture:detected', 'idle');
+      }
       return;
     }
 
@@ -139,7 +141,6 @@ class GestureController {
       }
 
       // Debouncing: We must see the same move for X ms to emit.
-      // (Bypassed if we just jump to a totally different strong inference)
       if (detectedMove !== this.currentGesture) {
         this.currentGesture = detectedMove;
         this.gestureStartStamp = performance.now();

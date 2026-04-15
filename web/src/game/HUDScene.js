@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { state } from '../utils/StateManager.js';
 
 export class HUDScene extends Phaser.Scene {
   constructor() {
@@ -30,16 +31,13 @@ export class HUDScene extends Phaser.Scene {
     // ========== TOP BAR (inside left panel) ==========
     const padX = 12;
 
-    // Pause icon (left corner)
+    // Pause button
     const pauseBtn = this.add.text(padX, 10, '❚❚ PAUSE', {
-      fontFamily: 'VCR', fontSize: '18px', color: '#f0e6d3'
+      fontFamily: 'DungeonFont', fontSize: '18px', color: '#f0e6d3'
     }).setInteractive({ useHandCursor: true });
     
-    // Wire up pause click!
     pauseBtn.on('pointerdown', () => {
-      // Find the GameScreen object by tapping into state or dispatching global
-      const stateObj = require('../utils/StateManager.js').state;
-      stateObj.emit('game:pause');
+      state.emit('game:pause');
     });
 
     // TIME
@@ -88,34 +86,45 @@ export class HUDScene extends Phaser.Scene {
     }).setOrigin(0, 1);
 
     // *** BOSS ANIMATED SPRITE — rendered HERE in HUDScene so it's visible ***
-    // The boss_duende spritesheet was loaded by GameScene's preload.
-    // HUDScene can access it because both scenes share the same Phaser.Game texture cache.
+    // The boss_idle and boss_cast spritesheets were loaded by GameScene.
     const bossCenterX = boxPadX + bossBoxW / 2;
     const bossCenterY = bossBoxY + bossBoxH / 2;
     
-    this.bossSprite = this.add.sprite(bossCenterX, bossCenterY, 'boss_duende');
-    // Scale to fit within the box (use the smaller dimension)
-    const fitScale = Math.min((bossBoxW - 10) / 848, (bossBoxH - 10) / 832);
-    this.bossSprite.setScale(fitScale);
-    this.bossSprite.setOrigin(0.5, 0.5);
-
-    // Create boss animations
-    if (!this.anims.exists('boss_idle')) {
+    // Create boss animations first
+    if (!this.anims.exists('anim_boss_idle')) {
       this.anims.create({
-        key: 'boss_idle',
-        frames: this.anims.generateFrameNumbers('boss_duende', { start: 0, end: 1 }),
-        frameRate: 3,
+        key: 'anim_boss_idle',
+        frames: this.anims.generateFrameNumbers('boss_idle', { start: 0, end: 7 }), // 8 frame animation
+        frameRate: 6,
         repeat: -1
       });
       this.anims.create({
-        key: 'boss_attack',
-        frames: this.anims.generateFrameNumbers('boss_duende', { start: 2, end: 5 }),
-        frameRate: 8,
+        key: 'anim_boss_attack',
+        frames: this.anims.generateFrameNumbers('boss_cast', { start: 0, end: 7 }), // 8 frame animation
+        frameRate: 10,
         repeat: 0
       });
     }
 
-    this.bossSprite.play('boss_idle');
+    this.bossSprite = this.add.sprite(bossCenterX, bossCenterY, 'boss_idle');
+    // Scale to fit within the box (based on original 122x110 cast size)
+    const fitScale = Math.min((bossBoxW - 10) / 122, (bossBoxH - 10) / 110);
+    this.bossSprite.setScale(fitScale);
+    this.bossSprite.setOrigin(0.5, 0.5);
+
+    // Revert to idle after attacking
+    this.bossSprite.on('animationcomplete-anim_boss_attack', () => {
+      this.bossSprite.setTexture('boss_idle');
+      this.bossSprite.play('anim_boss_idle');
+    });
+
+    this.bossSprite.play('anim_boss_idle');
+
+    // Make HUD expose playBossAttack for the GameScene to call
+    this.playBossAttack = () => {
+      this.bossSprite.setTexture('boss_cast');
+      this.bossSprite.play('anim_boss_attack');
+    };
 
     // Gentle float animation
     this.tweens.add({
@@ -141,11 +150,45 @@ export class HUDScene extends Phaser.Scene {
     this.hpBarY = hpBarY;
     this.hpBarH = hpBarH;
 
-    // Powerup label
-    const labelY = hpBarY + hpBarH + 10;
-    this.add.text(boxPadX, labelY, 'POWERUP: NONE', {
-      fontFamily: 'VCR', fontSize: '11px', color: '#cadc9f'
+    // ========== POWER-UP SLOT ==========
+    const puY = hpBarY + hpBarH + 8;
+    
+    this.add.text(boxPadX, puY, 'POWER-UP', {
+      fontFamily: 'VCR', fontSize: '11px', color: '#a89b8c'
     });
+
+    // Slot background box
+    const puBoxH = 44;
+    const puBoxY = puY + 14;
+    this.panelBg.fillStyle(0x0d0d22, 1);
+    this.panelBg.fillRect(boxPadX, puBoxY, bossBoxW, puBoxH);
+    this.panelBg.lineStyle(1.5, 0x333355, 1);
+    this.panelBg.strokeRect(boxPadX, puBoxY, bossBoxW, puBoxH);
+
+    // Chest icon (frame will change by rarity)
+    this.puIcon = this.add.sprite(boxPadX + 22, puBoxY + puBoxH / 2, 'powerup_chests', 0);
+    this.puIcon.setScale(1.4).setAlpha(0);
+
+    // Power-up name label
+    this.puLabel = this.add.text(boxPadX + 44, puBoxY + 6, ' — ', {
+      fontFamily: 'VCR', fontSize: '13px', color: '#666688'
+    });
+
+    // Timer bar background
+    const puBarY = puBoxY + puBoxH - 8;
+    this.panelBg.fillStyle(0x1a1a33, 1);
+    this.panelBg.fillRect(boxPadX + 44, puBarY, bossBoxW - 44, 5);
+
+    // Timer bar fill (redrawn every update)
+    this.puBarFill = this.add.graphics();
+    this.puBarMaxW = bossBoxW - 44;
+    this.puBarX = boxPadX + 44;
+    this.puBarY = puBarY;
+    
+    this._puEndTime = 0;
+    this._puDuration = 0;
+    this._puColor = 0x888888;
+    this._puActive = false;
 
     // ========== CAMERA BOX (bottom of left panel) ==========
     const camBoxH = Math.floor(remainingHeight * 0.30);
@@ -182,7 +225,41 @@ export class HUDScene extends Phaser.Scene {
         this.playBossDamageVfx();
       });
       gameScene.events.on('boss:died', () => this.onBossDied());
+      gameScene.events.on('boss:timestop', (isStopped) => {
+        if (!this.bossSprite) return;
+        if (isStopped) {
+            this.bossSprite.setTint(0x00aaff); // Freeze frosty blue
+            this.bossSprite.anims.pause();
+        } else {
+            this.bossSprite.clearTint();
+            this.bossSprite.anims.resume();
+        }
+      });
+      gameScene.events.on('powerup:activated', (name, rarity, durationMs) => {
+        this.showPowerup(name, rarity, durationMs);
+      });
+      gameScene.events.on('powerup:cleared', () => this.clearPowerup());
     }
+  }
+
+  showPowerup(name, rarity, durationMs) {
+    if (!this.puIcon) return;
+    const colors   = [0x888888,  0x44aaff, 0xffdd00];
+    const hexStr   = ['#aaaaaa', '#44aaff', '#ffdd00'];
+    const frames   = [0, 1, 2]; // Chests.png column per rarity
+    this._puActive   = true;
+    this._puEndTime  = Date.now() + durationMs;
+    this._puDuration = durationMs;
+    this._puColor    = colors[rarity] ?? 0x888888;
+    this.puIcon.setFrame(frames[rarity] ?? 0).setAlpha(1);
+    this.puLabel.setText(name).setColor(hexStr[rarity] ?? '#aaaaaa');
+  }
+
+  clearPowerup() {
+    this._puActive = false;
+    if (this.puIcon)    this.puIcon.setAlpha(0);
+    if (this.puLabel)   this.puLabel.setText(' — ').setColor('#666688');
+    if (this.puBarFill) this.puBarFill.clear();
   }
 
   playBossAttack() {
@@ -257,6 +334,16 @@ export class HUDScene extends Phaser.Scene {
     const displaySecs = seconds % 60;
     if (this.timerText) {
       this.timerText.setText(`${minutes.toString().padStart(2, '0')}:${displaySecs.toString().padStart(2, '0')}`);
+    }
+
+    // Live power-up timer bar drain
+    if (this._puActive && this.puBarFill) {
+      const remaining = Math.max(0, this._puEndTime - Date.now());
+      const ratio = remaining / this._puDuration;
+      this.puBarFill.clear();
+      this.puBarFill.fillStyle(this._puColor, 1);
+      this.puBarFill.fillRect(this.puBarX, this.puBarY, this.puBarMaxW * ratio, 5);
+      if (remaining <= 0) this.clearPowerup();
     }
   }
 }

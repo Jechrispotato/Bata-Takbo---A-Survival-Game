@@ -57,11 +57,21 @@ export class Player {
     else if (direction === 'right') dCol = 1;
     else return;
 
-    const targetCol = this.col + dCol;
-    const targetRow = this.row + dRow;
+    const dist = this.hasDash ? 3 : 1;
+    let targetCol = this.col + (dCol * dist);
+    let targetRow = this.row + (dRow * dist);
+
+    // Clamp dash within grid bounds
+    if (targetCol < 0) targetCol = 0;
+    if (targetCol >= this.grid.cols) targetCol = this.grid.cols - 1;
+    if (targetRow < 0) targetRow = 0;
+    if (targetRow >= this.grid.rows) targetRow = this.grid.rows - 1;
 
     if (targetCol < 0 || targetCol >= this.grid.cols) return;
     if (targetRow < 0 || targetRow >= this.grid.rows) return;
+
+    // Check Chapter 2 Obstacles
+    if (this.grid.cells[targetRow][targetCol].status === 'locked') return;
 
     this.isMoving = true;
     this.facing = direction;
@@ -73,22 +83,41 @@ export class Player {
     // Play directional dash animation
     this.sprite.play(`dash_${direction}`);
 
+    // Calculate duration: speed boosted halves transition time, dashing slightly extends it over the longer gap
+    let duration = this.isSpeedBoosted ? 75 : 150;
+    if (this.hasDash) duration = 200;
+
+    // Clear dash flag once actively moving
+    if (this.hasDash) {
+        this.hasDash = false;
+        this.scene.events.emit('powerup:cleared'); // Tells HUD to turn off the dash slot
+    }
+
     this.scene.tweens.add({
       targets: this.sprite,
       x: targetPos.x,
       y: targetPos.y,
-      duration: 150,
+      duration: duration,
       ease: 'Power2',
       onComplete: () => {
         this.isMoving = false;
         this.sprite.play(`idle_${this.facing}`);
         this.scene.events.emit('player:moved', this.col, this.row);
+
+        // Grid Hazard Effects
+        if (this.grid.cells[this.row][this.col].status === 'mud') {
+          // Slide in the same direction!
+          // Note: Because isMoving is false, if this hits a wall, move() softly fails.
+          if (!this.isAnchored) {
+            this.move(this.facing);
+          }
+        }
       }
     });
   }
 
   takeDamage() {
-    if (this.isInvulnerable || this.hp <= 0) return;
+    if (this.isInvulnerable || this.isInvincible || this.hp <= 0) return;
     
     this.hp--;
     this.scene.events.emit('player:health_changed', this.hp);

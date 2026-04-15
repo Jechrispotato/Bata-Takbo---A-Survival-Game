@@ -124,7 +124,7 @@ export class Grid {
   }
 
   /**
-   * Draw a permanently highlighted tile (used for golden damage tiles).
+   * Draw a permanently highlighted tile (used for golden damage tiles or hazards).
    * For temporary highlights, use telegraph() instead.
    */
   highlightTile(col, row, colorHex = 0xff0000, alpha = 0.5) {
@@ -132,6 +132,68 @@ export class Grid {
     const y = this.offsetY + row * this.tileSize;
     this.graphics.fillStyle(colorHex, alpha);
     this.graphics.fillRect(x, y, this.tileSize, this.tileSize);
+  }
+
+  /**
+   * Modify the physical state of a cell for hazards (Ch 2+)
+   */
+  setCellStatus(col, row, status, colorHex = 0x000000) {
+    if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+      this.cells[row][col].status = status;
+      if (status !== 'safe') {
+        this.highlightTile(col, row, colorHex, 0.4);
+      } else {
+        this.render(); // Clear overlay
+      }
+    }
+  }
+
+  /**
+   * Power Up Logistics
+   */
+  spawnChest(col, row, rarityIndex) {
+     if (!this.chests) this.chests = {};
+     const key = `${col}_${row}`;
+     if (this.chests[key]) return; // already a chest
+
+     const pos = this.getPixelPosition(col, row);
+     const chestSpr = this.scene.add.sprite(pos.x, pos.y, 'powerup_chests', rarityIndex);
+     // Base frames are 48x32 but the art is small, so we scale it up substantially
+     chestSpr.setScale(2.5).setDepth(20);
+     this.chests[key] = { sprite: chestSpr, rarity: rarityIndex };
+  }
+
+  hasChestAt(col, row) {
+     if(!this.chests) return false;
+     return !!this.chests[`${col}_${row}`];
+  }
+
+  removeChestAt(col, row) {
+     const key = `${col}_${row}`;
+     if (this.chests && this.chests[key]) {
+         const data = this.chests[key];
+         const rarity = data.rarity;
+         delete this.chests[key];
+
+         // Play the opening animation, then gently fade out upwards
+         if (data.sprite.scene.anims.exists(`chest_open_${rarity}`)) {
+            data.sprite.play(`chest_open_${rarity}`);
+            data.sprite.once('animationcomplete', () => {
+                data.sprite.scene.tweens.add({
+                    targets: data.sprite,
+                    alpha: 0,
+                    scale: 3.5, // Bloom slightly while fading
+                    duration: 300,
+                    onComplete: () => data.sprite.destroy()
+                });
+            });
+         } else {
+            data.sprite.destroy();
+         }
+
+         return rarity;
+     }
+     return null;
   }
 
   /**

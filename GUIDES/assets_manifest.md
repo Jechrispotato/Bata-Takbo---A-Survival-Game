@@ -58,11 +58,39 @@ Below are the exact recommended dimensions for assets compatible with the curren
 
 ---
 
-## Suggested Additional Assets
+## Upcoming Mechanics & Boss Sprites (Placeholders)
 
-To further enhance the game's premium pixel-art aesthetic, consider adding these:
+The following assets are required for the newly expanded Master Plan (Power-Ups and Chapters 1-3).
+Please review these and provide the specific image files/paths you'd like to use. If not provided, placeholders will be generated.
 
-1. **Chapter Transition Banner**: A splash sprite that appears when a level starts (approx. 800x200 px).
-2. **HUD Panel Texture**: A stone or parchment texture overlaying the left status panel (450x1080 px).
-3. **Animated Environment Props**: Animated wall torches or dripping pipes (64x64 px).
-4. **Tile Edge Variations**: Edge/corner sprites to make the grid transition into the background more naturally (128x128 px).
+### 4. Power-Up Ecosystem (Grid Drops)
+
+**Asset Strategy (Per User Input):**
+- **Grid Drops:** Use `Game Assets/Chest Sprite/Chests.png` (First 3 columns: Bronze/Silver/Gold) for Common, Rare, and Legendary grid drops.
+- **Chest VFX:** Yes! When the player touches a chest, it will play the opening animation and trigger a Phaser 3 Particle Emitter burst effect before the power-up is applied.
+- **HUD Active UI:** Use `Game Assets/PowerUpsUI/02.png` as a universal placeholder. It features green/blue/gold borders that visually map to the rarity tiers, alongside a duration indicator.
+
+| Mechanic | Need | Recommended Size | User Sprite Comment |
+|----------|------|------------------|---------------------|
+| **Common: Speed Boost** | Ground item & HUD icon | 64x64 | Use `Chests.png` (Col 1) for drop. Use `02.png` for HUD placeholder. |
+| **Common: Vitality (Shield)** | Ground item & player bubble FX | 64x64 | Use `Chests.png` (Col 1) for drop. Use `02.png` for HUD placeholder. |
+| **Common: Sight (Compass)** | Ground item & glowing path FX | 64x64 | Use `Chests.png` (Col 1) for drop. Use `02.png` for HUD placeholder. |
+| **Rare: The Anchor** | Ground item & active HUD icon | 64x64 | Use `Chests.png` (Col 2) for drop. Use `02.png` for HUD placeholder. |
+| **Rare: Dash** | Ground item & blur trail FX | 64x64 | Use `Chests.png` (Col 2) for drop. Use `02.png` for HUD placeholder. |
+| **Rare: Health Potion** | Ground item & heal sparkle FX | 64x64 | Use `Chests.png` (Col 2) for drop. HUD instant (no duration). |
+| **Legendary: Invincibility Aura** | Ground item & gold flash FX | 64x64 | Use `Chests.png` (Col 3) for drop. Use `02.png` for HUD placeholder. |
+| **Legendary: Time Stop** | Ground item & screen tint/clock FX | 64x64 | Use `Chests.png` (Col 3) for drop. Use `02.png` for HUD placeholder. |
+| **Legendary: Teleport (Blink)** | Ground item & snap flash FX | 64x64 | Use `Chests.png` (Col 3) for drop. HUD instant (no duration). |
+
+### 5. Boss Mechanics & Hazards
+| Mechanic | Need | Recommended Size | User Sprite Comment |
+|----------|------|------------------|---------------------|
+| **Golden Tile** | Glowing objective tile | 128x128 | _Pending user input_ |
+| **Wandering Torso (Ch 1)** | Obstacle sprite | 128x128 | _Pending user input_ |
+| **Mud Pit (Ch 2)** | Ground hazard texture (3x3) | 384x384 total | _Pending user input_ |
+| **Heavy Lockdown (Ch 2)** | Padlock/Chains overlay (2x2) | 256x256 total | _Pending user input_ |
+| **Tidal Wave (Ch 3)** | Large sweeping hazard | Sweeps grid | _Pending user input_ |
+| **Whirlpool (Ch 3)** | Animated water trap (2x2) | 256x256 total | _Pending user input_ |
+| **Siren's Current (Ch 3)** | Directional water flow (Row/Col) | Tiles | _Pending user input_ |
+| **Geyser Trap (Ch 3)** | Ground eruption FX | 128x128 | _Pending user input_ |
+
