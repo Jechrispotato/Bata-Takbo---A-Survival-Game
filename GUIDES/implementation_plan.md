@@ -1048,13 +1048,15 @@ This phase focuses on the newly established Master Plan Fairness Rules and the t
 
 ### Phase 5: Complete Chapter Implementations — TO DO
 
-#### Chapter 1: Manananggal (Grid Size: 5x5)
-Theme: The Brake Pedal. Goal: Stop exactly on targets without overshooting.
-- `[x]` Card Flip UI in Chapter Select.
-- `[x]` Boss integration using the newly provided 3-phase robed boss sprites (Placeholder for Manananggal during development).
-- `[ ]` **Attack 1:** *Spot Dodging*. 3 to 4 random tiles flash red.
-- `[ ]` **Attack 2:** *Player Tracking*. Red square appears exactly tracking the player's current tile.
-- `[ ]` **Attack 3:** *Dynamic Obstacle*. A 1x1 physical barrier drops on grid and slowly wanders, preventing tile access.
+#### Chapter 1: The Blood Master (Grid Size: 5x5)
+Theme: Gore & Rhythm. Goal: Quick successive dodging relying on rhythm "move, stop, move" mechanics.
+
+**[NEW REQUIREMENTS — AWAITING REVIEW]**
+- `[x]` Setup: Assets copied out of `Game Assets` into `web/public/assets/projectiles/chapter1/`.
+- `[ ]` **Dynamic Pre-Loader:** Since the blood sequences are raw frame dumps (15-60 frames each) and not actual spritesheets, we must build a dynamic loop in `GameScene`'s loader to inject them (e.g. `1_000.png`) and stitch them via `anims.create(generateFrameNames)` so they play smoothly. Horizontal blood beams will be force-rotated 90 degrees downward.
+- `[ ]` **Attack 1:** *Crimson Splatter (Spot Dodging)*. 3-4 random tiles flash for 1.5s. The `blood` sequence animation falls downwards. Once it touches the grid target, it destroys itself and spawns the lengthy `blood-splat` impact animation.
+- `[ ]` **Attack 2:** *The Bleeding Eye (Player Tracking)*. The `eye.png` spawns outside bounds. It creates a target lock exactly on the tile the player is standing on. As it drops towards the target, it rapidly drops scaled-up `dark-blood` animations to paint a gruesome trail. Crashes with `blood-splat`.
+- `[ ]` **Attack 3:** *Piercing Blood Volley (Rhythm Combo)*. Choso-style rhythm attack that forces the player to step back and forth rapidly without panicking. A hand sprite appears (`hands-1` up, `hand-2` top-right, `hand-3` bottom-right) locking onto the player, firing a rapid beam. This repeats instantly 3 to 5 times.
 
 #### Chapter 2: Bungisngis (Grid Size: 7x7)
 Theme: Geometry and Momentum. Goal: Deal with slippery terrain and large blocks.

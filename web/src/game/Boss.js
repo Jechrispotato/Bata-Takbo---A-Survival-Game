@@ -24,14 +24,11 @@ export class Boss {
   }
 
   startAttackLoop() {
-    this.attackTimer = this.scene.time.addEvent({
-      delay: 3500,
-      callback: this.executeAttack,
-      callbackScope: this,
-      loop: true
-    });
-    
     this.attackCycleCount = 0;
+    this.lastAttackId = -1;
+    
+    // Explicit 3-second startup breather before the very first shot
+    this.attackTimer = this.scene.time.delayedCall(3000, this.executeAttack, [], this);
 
     // Phase 4: Time Stop buff listener
     this.scene.events.on('boss:timestop', (isStopped) => {
@@ -44,60 +41,60 @@ export class Boss {
   executeAttack() {
     this.waveCount++;
     
+    let currentAttackDuration = 2000; // Baseline fallback
+    
     // Every 4th wave, spawn the Golden Damage Tile
     if (this.waveCount % 4 === 0) {
       this.spawnDamageTile();
-      return;
-    }
-    
-    const targets = [];
-    this.attackCycleCount++;
+      currentAttackDuration = 4000;
+    } else {
+      const targets = [];
+      this.attackCycleCount++;
 
-    // Boss Phase 4 Loot Logistics: Spawn a drop every 5 attacks
-    if (this.attackCycleCount % 5 === 0 && this.grid.spawnChest) {
-       const freeSpots = [];
-       for(let r=0; r<this.grid.rows; r++) {
-         for(let c=0; c<this.grid.cols; c++) {
-           if (this.grid.cells[r][c].status === 'safe' &&
-               (c !== this.scene.player.col || r !== this.scene.player.row)) {
-               freeSpots.push({c, r});
+      // Boss Phase 4 Loot Logistics: Spawn a drop every 5 attacks
+      if (this.attackCycleCount % 5 === 0 && this.grid.spawnChest) {
+         const freeSpots = [];
+         for(let r=0; r<this.grid.rows; r++) {
+           for(let c=0; c<this.grid.cols; c++) {
+             if (this.grid.cells[r][c].status === 'safe' &&
+                 (c !== this.scene.player.col || r !== this.scene.player.row)) {
+                 freeSpots.push({c, r});
+             }
            }
          }
-       }
-       if (freeSpots.length > 0) {
-         const spot = Phaser.Math.RND.pick(freeSpots);
-         const roll = Math.random();
-         let rarity = 0; // Common Green
-         if (roll > 0.9) rarity = 2; // Legendary Gold
-         else if (roll > 0.7) rarity = 1; // Rare Blue
-         
-         this.grid.spawnChest(spot.c, spot.r, rarity);
-       }
-    }
-    
-    // Chapter 1 Specific Attack Generation
-    if (this.scene.chapterId === 1) {
-      const pattern = Phaser.Math.Between(0, 1); // 0 = Spot Dodging, 1 = Player Tracking
-      
-      if (pattern === 0) {
-        // Spot Dodging: 3-4 random tiles
-        const numAttacks = Phaser.Math.Between(3, 4);
-        for (let i = 0; i < numAttacks; i++) {
-          targets.push({
-            c: Phaser.Math.Between(0, this.grid.cols - 1),
-            r: Phaser.Math.Between(0, this.grid.rows - 1)
-          });
-        }
-      } else if (pattern === 1) {
-        // Player Tracking: Drops exactly on the player's current tile 
-        // to force them to move continuously
-        targets.push({
-          c: this.scene.player.col,
-          r: this.scene.player.row
-        });
+         if (freeSpots.length > 0) {
+           const spot = Phaser.Math.RND.pick(freeSpots);
+           const roll = Math.random();
+           let rarity = 0; // Common Green
+           if (roll > 0.9) rarity = 2; // Legendary Gold
+           else if (roll > 0.7) rarity = 1; // Rare Blue
+           
+           this.grid.spawnChest(spot.c, spot.r, rarity);
+         }
       }
-    } else if (this.scene.chapterId === 2) {
-      const pattern = Phaser.Math.Between(0, 4);
+      
+      // Chapter 1 Specific Attack Routing
+      if (this.scene.chapterId === 1) {
+         this.scene.events.emit('boss:attack');
+         
+         // Fairness Rule #5: Pure randomization WITH History Blocking (Anti-Repeat Logic)
+         let patternId;
+         do {
+            patternId = Phaser.Math.Between(0, 2);
+         } while (patternId === this.lastAttackId);
+         this.lastAttackId = patternId;
+
+         if (patternId === 0)      currentAttackDuration = this.ch1AttackCrimsonSplatter();
+         else if (patternId === 1) currentAttackDuration = this.ch1AttackBleedingEye();
+         else                      currentAttackDuration = this.ch1AttackBloodVolley();
+         
+      } else if (this.scene.chapterId === 2) {
+      // Retain fairness anti-repeat block here too
+      let pattern;
+      do {
+         pattern = Phaser.Math.Between(0, 4);
+      } while (pattern === this.lastAttackId);
+      this.lastAttackId = pattern;
       
       if (pattern === 0) {
         // Attack 1: The X-Crush (Full Diagonals)
@@ -188,19 +185,201 @@ export class Boss {
          r: Phaser.Math.Between(0, this.grid.rows - 1)
       });
     }
-    // Tell HUDScene to play boss attack animation (texture swaps to boss_cast)
-    this.scene.events.emit('boss:attack');
-
-    // Unleash projectiles with strict Fairness Rule #4 (1.5 - 2.0 second telegraph)
-    const telegraphTime = Phaser.Math.Between(1500, 2000);
-    targets.forEach(t => {
-      this.grid.telegraph(t.c, t.r, telegraphTime);
-      this.scene.time.delayedCall(telegraphTime, () => {
-        if (this.hp > 0) {
-          new Projectile(this.scene, this.grid, t.c, t.r);
-        }
+      // Tell HUDScene to play boss attack animation (texture swaps to boss_cast)
+      if (this.scene.chapterId !== 1) this.scene.events.emit('boss:attack');
+  
+      // Unleash generic projectiles with strict Fairness Rule (legacy format)
+      const telegraphTime = Phaser.Math.Between(1500, 2000);
+      currentAttackDuration = telegraphTime + 500; // Track the legacy duration logic
+      
+      targets.forEach(t => {
+        this.grid.telegraph(t.c, t.r, telegraphTime);
+        this.scene.time.delayedCall(telegraphTime, () => {
+          if (this.hp > 0) {
+            new Projectile(this.scene, this.grid, t.c, t.r);
+          }
+        });
       });
+    }
+
+    // Dynamic Cascading Pause Scheduler setup
+    // This strictly ensures the game rests for precisely 3.0 seconds AFTER the active attack phase completely clears!
+    if (this.hp > 0) {
+      if (this.attackTimer) this.attackTimer.remove(); // Safely clear old references
+      this.attackTimer = this.scene.time.delayedCall(currentAttackDuration + 3000, this.executeAttack, [], this);
+    }
+  }
+
+  // ================= CHAPTER 1 BLOOD MECHANICS =================
+
+  ch1AttackCrimsonSplatter() {
+    const numAttacks = Phaser.Math.Between(3, 4);
+    for (let i = 0; i < numAttacks; i++) {
+      const c = Phaser.Math.Between(0, this.grid.cols - 1);
+      const r = Phaser.Math.Between(0, this.grid.rows - 1);
+      this.grid.telegraph(c, r, 1500);
+      
+      this.scene.time.delayedCall(1500, () => {
+        const dest = this.grid.getPixelPosition(c, r);
+        const startY = dest.y - 450; // Drop from sky high
+        
+        // Force angle downwards naturally, scale up the 16px beam to be 6x larger
+        const blood = this.scene.add.sprite(dest.x, startY, 'blood_0');
+        blood.setRotation(Math.PI / 2).setScale(6.0).play('anim_blood').setDepth(30);
+        
+        this.scene.tweens.add({
+          targets: blood, y: dest.y, duration: 400, ease: 'Power2',
+          onComplete: () => {
+            blood.destroy();
+            // Scale up the 32px splat to 5x
+            const splat = this.scene.add.sprite(dest.x, dest.y, 'blood_splat_000').setScale(5.0).setDepth(20);
+            splat.play('anim_blood_splat').once('animationcomplete', () => splat.destroy());
+            
+            // Native Area Damage Check
+            if (this.scene.player.col === c && this.scene.player.row === r) {
+              this.scene.player.takeDamage();
+            }
+          }
+        });
+      });
+    }
+    // Execution duration is precisely 1500ms warning + 400ms physical impact
+    return 1900;
+  }
+
+  ch1AttackBleedingEye() {
+    // Lock onto player immediately but do not adjust!
+    const c = this.scene.player.col;
+    const r = this.scene.player.row;
+    this.grid.telegraph(c, r, 1500);
+    
+    // Spawn eye off-screen
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -50 : this.scene.scale.width + 50;
+    const startY = -100;
+    
+    // Eye is 2500x2500 native. Dialed up to 0.06
+    const eye = this.scene.add.sprite(startX, startY, 'ch1_eye').setScale(0.06).setDepth(40);
+    // If it comes from the left, flip it horizontally! The asset natively faces left.
+    if (fromLeft) {
+       eye.setFlipX(true);
+    }
+    
+    const dest = this.grid.getPixelPosition(c, r);
+    
+    // Animate to target over 1.5s warning period (giving the dripping trail time to render continuously)
+    this.scene.tweens.add({
+      targets: eye, x: dest.x, y: dest.y, duration: 1500, ease: 'Cubic.easeIn',
+      onComplete: () => {
+        eye.destroy();
+        // Scale 32px splat up to 5x for impact
+        const splat = this.scene.add.sprite(dest.x, dest.y, 'blood_splat_000').setScale(5.0).setDepth(20);
+        splat.play('anim_blood_splat').once('animationcomplete', () => splat.destroy());
+        // Exact Area Damage Check
+        if (this.scene.player.col === c && this.scene.player.row === r) {
+           this.scene.player.takeDamage();
+        }
+      }
     });
+
+    // Dripping Trail loop - stamps a dark frame every 50 ms in its wake
+    const dripCount = Math.floor(1500 / 50);
+    const dripTimer = this.scene.time.addEvent({
+      delay: 50, repeat: dripCount - 1,
+      callback: () => {
+        // Dark blood is 16px native. Scale up 7x for a wide, heavy trail
+        const drip = this.scene.add.sprite(eye.x, eye.y, 'dark_blood_0').setScale(7.0).setDepth(35);
+        drip.play('anim_dark_blood');
+        this.scene.tweens.add({
+           targets: drip, alpha: 0, scale: 2.0, y: drip.y + 60, duration: 800, onComplete: () => drip.destroy()
+        });
+      }
+    });
+
+    // Execution physically takes 1500ms to arrive directly at the target, and splat clears itself organically
+    return 1500;
+  }
+
+  ch1AttackBloodVolley() {
+    // Rhythm Combo: 3 to 5 rapid burst beats
+    const numShots = Phaser.Math.Between(3, 5);
+    let sequenceDelay = 0;
+    
+    for (let i = 0; i < numShots; i++) {
+        this.scene.time.delayedCall(sequenceDelay, () => {
+            const roll = Math.random();
+            let handImg = 'ch1_hand1'; 
+            let startLoc = { x: 0, y: 0 };
+            
+            // Recompute target on the player at the start of each individual beat to force them to react constantly
+            const targetCol = Phaser.Math.Clamp(this.scene.player.col, 0, this.grid.cols - 1);
+            const targetRow = Phaser.Math.Clamp(this.scene.player.row, 0, this.grid.rows - 1);
+            const dest = this.grid.getPixelPosition(targetCol, targetRow);
+            
+            let scaleOverride = 1.0;
+            
+            // Tether spawns VISIBLY ON the border of the physical grid so it plays nice with tight camera zooms.
+            const gridRight = this.grid.offsetX + (this.grid.cols * this.grid.tileSize);
+            const gridTop = this.grid.offsetY;
+            const gridBottom = this.grid.offsetY + (this.grid.rows * this.grid.tileSize);
+            
+            if (roll < 0.33) {
+                handImg = 'ch1_hand1'; // Native: 1080x1663 -> Scale down heavily
+                startLoc = { x: dest.x, y: gridBottom - 10 }; // Just barely hugging the bottom tile line
+                scaleOverride = 0.09; 
+            } else if (roll < 0.66) {
+                handImg = 'ch1_hand2'; // Native: 344x240 -> Mid scale
+                startLoc = { x: gridRight - 40, y: gridTop + 20 }; // Pushed significantly IN to the grid top-right
+                scaleOverride = 0.35; 
+            } else {
+                handImg = 'ch1_hand3'; // Native: 181x322 -> Less scaled down
+                startLoc = { x: gridRight - 40, y: gridBottom - 40 }; // Pushed significantly IN to the grid bottom-right
+                scaleOverride = 0.5; 
+            }
+            
+            // Hand flashes into view
+            const hand = this.scene.add.sprite(startLoc.x, startLoc.y, handImg).setScale(scaleOverride).setDepth(50);
+            
+            // Calculate angle once to point hand toward target
+            const targetAngle = Math.atan2(dest.y - startLoc.y, dest.x - startLoc.x);
+            
+            // Adjust base rotations so fingers point correctly
+            // ch1_hand1 points UP by default ( -Math.PI/2 )
+            // ch1_hand2 faces top-right
+            // ch1_hand3 faces bottom-right
+            if (handImg === 'ch1_hand1') hand.setRotation(targetAngle + Math.PI / 2);
+            else hand.setRotation(targetAngle);
+
+            this.grid.telegraph(targetCol, targetRow, 1000);
+            
+            this.scene.time.delayedCall(1000, () => {
+                hand.destroy();
+                // 16px beam -> 6x scale 
+                const blood = this.scene.add.sprite(startLoc.x, startLoc.y, 'blood_0').setScale(6.0).setDepth(45);
+                
+                // Calculates precise geometry projection angle to face the target exactly
+                const angle = Math.atan2(dest.y - startLoc.y, dest.x - startLoc.x);
+                blood.setRotation(angle).play('anim_blood');
+                
+                // High-speed beam connection
+                this.scene.tweens.add({
+                    targets: blood, x: dest.x, y: dest.y, duration: 200,
+                    onComplete: () => {
+                        blood.destroy();
+                        const splat = this.scene.add.sprite(dest.x, dest.y, 'blood_splat_000').setScale(5.0).setDepth(20);
+                        splat.play('anim_blood_splat').once('animationcomplete', () => splat.destroy());
+                        
+                        if (this.scene.player.col === targetCol && this.scene.player.row === targetRow) {
+                             this.scene.player.takeDamage();
+                        }
+                    }
+                });
+            });
+        });
+        sequenceDelay += 1300; // Perfect Rhythm interval space
+    }
+    // Execution physically encompasses the staggered looping timing until the final beam lands
+    return (numShots - 1) * 1300 + 1200;
   }
 
   spawnDamageTile() {

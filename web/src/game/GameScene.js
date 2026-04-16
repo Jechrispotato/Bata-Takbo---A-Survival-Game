@@ -33,6 +33,21 @@ export class GameScene extends Phaser.Scene {
     if (this.chapterId === 1) {
       this.load.spritesheet('boss_idle', '/assets/characters/boss/chapter-1/boss_idle.png', { frameWidth: 85, frameHeight: 94 });
       this.load.spritesheet('boss_cast', '/assets/characters/boss/chapter-1/boss_cast.png', { frameWidth: 122, frameHeight: 110 });
+      
+      // Phase 5: Dynamic Loading of Custom Blood/Gore Sequence Projectiles
+      for (let i = 0; i <= 14; i++) {
+        this.load.image(`blood_${i}`, `/assets/projectiles/chapter1/blood/1_${i}.png`);
+        this.load.image(`dark_blood_${i}`, `/assets/projectiles/chapter1/dark-blood/1_${i}.png`);
+      }
+      for (let i = 0; i <= 59; i++) {
+        const str = i.toString().padStart(3, '0');
+        this.load.image(`blood_splat_${str}`, `/assets/projectiles/chapter1/blood-splat/1_${str}.png`);
+      }
+      this.load.image('ch1_eye', '/assets/projectiles/chapter1/eye.png');
+      this.load.image('ch1_hand1', '/assets/projectiles/chapter1/hands-1.png');
+      this.load.image('ch1_hand2', '/assets/projectiles/chapter1/hand-2.png');
+      this.load.image('ch1_hand3', '/assets/projectiles/chapter1/hand-3.png');
+
     } else {
       // Default to Chapter 2 Placeholder
       this.load.spritesheet('boss_idle', '/assets/characters/boss/chapter-2/boss_idle.png', { frameWidth: 87, frameHeight: 110 });
@@ -99,6 +114,21 @@ export class GameScene extends Phaser.Scene {
           frameRate: 12,
           repeat: 0
         });
+      }
+
+      // Compile Phase 5 Chapter 1 Blood Sequences into Animations
+      if (this.chapterId === 1 && !this.anims.exists('anim_blood')) {
+          let bFrames = [];
+          for (let i = 0; i <= 14; i++) bFrames.push({ key: `blood_${i}` });
+          this.anims.create({ key: 'anim_blood', frames: bFrames, frameRate: 15, repeat: -1 });
+
+          let dbFrames = [];
+          for (let i = 0; i <= 14; i++) dbFrames.push({ key: `dark_blood_${i}` });
+          this.anims.create({ key: 'anim_dark_blood', frames: dbFrames, frameRate: 15, repeat: -1 });
+
+          let splatFrames = [];
+          for (let i = 0; i <= 59; i++) splatFrames.push({ key: `blood_splat_${i.toString().padStart(3, '0')}` });
+          this.anims.create({ key: 'anim_blood_splat', frames: splatFrames, frameRate: 30, repeat: 0 });
       }
     }
 

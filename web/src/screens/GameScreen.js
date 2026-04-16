@@ -59,8 +59,23 @@ export const GameScreen = {
           gap: var(--space-lg);
         ">
           <h2 class="screen-title" style="font-size: var(--text-2xl);">PAUSED</h2>
+          
+          <div style="background: rgba(0,0,0,0.5); padding: var(--space-md); border-radius: var(--radius-lg); width: 80%; max-width: 400px; display: flex; flex-direction: column; gap: var(--space-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+               <span style="color: var(--text-muted); font-size: var(--text-sm);">Gesture Sensitivity</span>
+               <span id="pause-val-sensitivity" style="color: var(--primary);">${Math.round(state.get('settings').gesture.sensitivity * 100)}%</span>
+            </div>
+            <input type="range" class="slider" id="pause-slider-sensitivity" min="40" max="95" value="${Math.round(state.get('settings').gesture.sensitivity * 100)}" style="width: 100%;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-sm);">
+               <span style="color: var(--text-muted); font-size: var(--text-sm);">Gesture Debounce</span>
+               <span id="pause-val-debounce" style="color: var(--primary);">${state.get('settings').gesture.debounce}ms</span>
+            </div>
+            <input type="range" class="slider" id="pause-slider-debounce" min="50" max="300" step="10" value="${state.get('settings').gesture.debounce}" style="width: 100%;">
+          </div>
+
           <button class="menu-btn active" id="btn-resume">RESUME</button>
-          <button class="menu-btn text-red" id="btn-quit">QUIT</button>
+          <button class="menu-btn text-red" id="btn-quit">QUIT TO MENU</button>
         </div>
       </div>
     `;
@@ -123,6 +138,29 @@ export const GameScreen = {
     // 4. Bind UI Controls
     this.unsubGamePause = state.on('game:pause', () => this.togglePause(true));
     el.querySelector('#btn-resume').addEventListener('click', () => this.togglePause(false));
+    
+    // Wire up Pause Menu Live Setting Sliders
+    const sensSlider = el.querySelector('#pause-slider-sensitivity');
+    const sensVal = el.querySelector('#pause-val-sensitivity');
+    sensSlider.addEventListener('input', (e) => {
+        const raw = parseInt(e.target.value);
+        sensVal.textContent = `${raw}%`;
+        const s = state.get('settings');
+        s.gesture.sensitivity = raw / 100;
+        state.set('settings', s);
+        state.saveSettings();
+    });
+
+    const debSlider = el.querySelector('#pause-slider-debounce');
+    const debVal = el.querySelector('#pause-val-debounce');
+    debSlider.addEventListener('input', (e) => {
+        const raw = parseInt(e.target.value);
+        debVal.textContent = `${raw}ms`;
+        const s = state.get('settings');
+        s.gesture.debounce = raw;
+        state.set('settings', s);
+        state.saveSettings();
+    });
     
     el.querySelector('#btn-quit').addEventListener('click', () => {
       this.game.destroy(true);

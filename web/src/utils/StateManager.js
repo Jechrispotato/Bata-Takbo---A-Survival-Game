@@ -98,8 +98,8 @@ class StateManager {
         muted: false,
       },
       gesture: {
-        sensitivity: 0.75,
-        debounce: 150,
+        sensitivity: 0.60,
+        debounce: 100,
         preferredHand: 'any',
       },
       display: {
