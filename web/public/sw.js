@@ -1,7 +1,7 @@
 // Service Worker — Bata, Takbo!
 // Basic cache-first strategy for game assets
 
-const CACHE_NAME = 'bata-takbo-v1';
+const CACHE_NAME = 'bata-takbo-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -40,6 +40,12 @@ self.addEventListener('activate', (event) => {
 // Fetch — cache first for assets, network first for API
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // DEV MODE BYPASS: Never intercept requests on Localhost so live-reloading works flawlessly
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   // Network only for Firebase API calls
   if (url.hostname.includes('firebase') || url.hostname.includes('googleapis')) {
