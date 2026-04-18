@@ -9,10 +9,10 @@ export const Spellbook = {
 
     const bosses = [
       {
-        id: 'redcap',
+        id: 'boss1',
         chapter: 1,
-        name: "The RedCap",
-        desc: "A malicious fae creature that dwells in the darkest dungeons. Known for hurling cursed objects at trespassers, the RedCap's lair is littered with the remains of those who couldn't dodge its wrath.",
+        name: "The Manananggal",
+        desc: "A fearsome vampiric creature from Philippine folklore. By night, she detaches her upper torso and sprouts bat-like wings to hunt her prey from above.",
         attacks: [
           { name: 'Scatter Shot', desc: 'Throws items at random tiles' },
           { name: 'Column Drop', desc: 'Drops items on entire column' },
@@ -20,15 +20,25 @@ export const Spellbook = {
           { name: 'Diagonal Rain', desc: 'Items rain along diagonals' },
           { name: 'Center Blast', desc: 'Explosive blast in center area' },
         ],
-        img: '/assets/ui/chapter-1.png',
+        imgUnlocked: '/assets/ui/chapters/chapter1a.png',
+        imgLocked: '/assets/ui/chapters/chapterBack.png',
       },
       {
         id: 'boss2',
         chapter: 2,
-        name: "???",
-        desc: "Defeat Chapter 1 to uncover this fearsome adversary...",
-        attacks: [],
-        img: '/assets/ui/chapter-2.png',
+        name: "The Bungisngis",
+        desc: "A fearsome folklore giant with a single eye and enormous tusks. His laugh paralyzes prey before his jungle magic unleashes deadly flora.",
+        attacks: [
+          { name: 'Beeswarm', desc: 'Insect swarm sweeping across 3 diagonal tiles' },
+          { name: 'Pollen Burst', desc: 'Explosive chain reaction rings' },
+          { name: 'Strangling Vines', desc: 'Traps player, requires rapid gesture QTE' },
+          { name: 'Carrot Rain', desc: 'Heavy carrots falling on highlighted tiles' },
+          { name: 'Exploding Seeds', desc: 'Seed pods that detonate after a delay' },
+          { name: 'Snapping Flora', desc: 'Melee trap clamping on adjacent tiles' },
+          { name: 'Acid Spitter', desc: 'Plants shooting horizontal lines of acid' },
+        ],
+        imgUnlocked: '/assets/ui/chapters/chapter2a.png',
+        imgLocked: '/assets/ui/chapters/chapterBack.png',
       },
       {
         id: 'boss3',
@@ -36,25 +46,30 @@ export const Spellbook = {
         name: "???",
         desc: "A terror that awaits only the most skilled survivors...",
         attacks: [],
-        img: '/assets/ui/chapter-3.png',
+        imgUnlocked: '/assets/ui/chapters/chapterBack.png',
+        imgLocked: '/assets/ui/chapters/chapterBack.png',
       },
     ];
 
     const entriesHtml = bosses.map((boss, i) => {
       const isUnlocked = bestiary[boss.id]?.encountered;
       const unlockedAttacks = bestiary[boss.id]?.attacksSeen || [];
+      
+      const displayName = isUnlocked ? boss.name : '???';
+      const displayDesc = isUnlocked ? boss.desc : '???';
+      const displayImg = isUnlocked ? boss.imgUnlocked : boss.imgLocked;
 
       return `
         <div class="spellbook-entry ${isUnlocked ? '' : 'locked'}" 
              style="animation: fadeInUp 0.4s ease forwards; animation-delay: ${i * 0.15}s; opacity: 0;">
           <div style="display: flex; gap: var(--space-md); align-items: flex-start;">
-            <img src="${boss.img}" alt="${boss.name}" 
-                 style="width: 80px; height: auto; border-radius: var(--radius-md); border: 1px solid rgba(255,107,26,0.2); flex-shrink: 0;" />
+            <img src="${displayImg}" alt="${displayName}" 
+                 style="width: 120px; height: auto; flex-shrink: 0;" />
             <div>
               <div class="spellbook-entry__boss-name">
-                ${isUnlocked ? boss.name : '🔒 ' + boss.name}
+                ${isUnlocked ? displayName : '🔒 ' + displayName}
               </div>
-              <div class="spellbook-entry__desc">"${boss.desc}"</div>
+              <div class="spellbook-entry__desc">"${displayDesc}"</div>
               ${boss.attacks.length > 0 ? `
                 <div style="margin-top: var(--space-sm);">
                   <div style="font-size: var(--text-xs); color: var(--accent-orange); letter-spacing: 1px; margin-bottom: var(--space-xs);">

@@ -31,6 +31,7 @@ export const ResultsScreen = {
         </div>
 
         <div style="display: flex; gap: var(--space-md); animation: fadeInUp 0.5s 0.4s both;">
+          ${result.isVictory && result.chapterId < 3 ? `<button class="menu-btn" id="btn-results-next" style="color: var(--accent-gold); background: transparent; border: none;">NEXT CHAPTER</button>` : ''}
           <button class="menu-btn" id="btn-results-retry" style="background: transparent; border: none;">RETRY</button>
           <button class="menu-btn" id="btn-results-menu" style="background: transparent; border: none;">MAIN MENU</button>
         </div>
@@ -40,6 +41,13 @@ export const ResultsScreen = {
 
   onEnter(el) {
     const result = state.get('lastGameResult') || { chapterId: 1 };
+
+    const btnNext = el.querySelector('#btn-results-next');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        window.__screenManager.navigate('game-screen', { chapterId: result.chapterId + 1 });
+      });
+    }
 
     el.querySelector('#btn-results-retry').addEventListener('click', () => {
       window.__screenManager.navigate('game-screen', { chapterId: result.chapterId });

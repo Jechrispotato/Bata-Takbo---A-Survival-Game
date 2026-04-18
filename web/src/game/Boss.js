@@ -435,12 +435,12 @@ export class Boss {
 
   /** Attack 1: The Beeswarm — Diagonal Sweep */
   ch2AttackBeeswarm() {
-    // X pattern: Both TL->BR and TR->BL simultaneously, 3 tiles thick
+    // X pattern: Sweep 1 (TL->BR) then Sweep 2 (TR->BL)
     const tiles1 = [];
     const tiles2 = [];
-    // Pre-compute which tiles each row occupies for precise per-tile damage windows
-    const tilesByRow1 = {}; // row -> [{c,r}]
+    const tilesByRow1 = {};
     const tilesByRow2 = {};
+    
     for (let c = 0; c < this.grid.cols; c++) {
       for (let r = 0; r < this.grid.rows; r++) {
         if (Math.abs(r - c) <= 1) {
@@ -456,21 +456,21 @@ export class Boss {
       }
     }
 
-    // Telegraph both thick diagonals
-    tiles1.forEach(t => this.grid.telegraph(t.c, t.r, 1500));
-    tiles2.forEach(t => this.grid.telegraph(t.c, t.r, 1500));
+    const scale = this.grid.tileSize * 1.8;
+    const travelTime = 2500; // Make bees fly faster so sequential attack isn't too agonizing
+    const rowWindow = travelTime / this.grid.rows;
+    const offscreen = travelTime * 0.15;
 
-    // After warning, sweep the beeswarm sprites across
-    this.scene.time.delayedCall(1500, () => {
-      if (this.hp <= 0) return;
+    const executeSwarm = (tiles, tilesByRow, baseStart, baseEnd, isFlip) => {
+      // Telegraph just this line
+      tiles.forEach(t => this.grid.telegraph(t.c, t.r, 1200));
 
-      const scale = this.grid.tileSize * 1.8;
-
-      const spawnSwarmLine = (baseStart, baseEnd, isFlip) => {
+      this.scene.time.delayedCall(1200, () => {
+        if (this.hp <= 0) return;
+        
         const s = this.grid.getPixelPosition(baseStart.c, baseStart.r);
         const e = this.grid.getPixelPosition(baseEnd.c, baseEnd.r);
         
-        // Push start/end well off-screen
         const dx = e.x - s.x;
         const dy = e.y - s.y;
         const startOffX = s.x - dx * 0.5;
@@ -478,17 +478,15 @@ export class Boss {
         const endOffX = e.x + dx * 0.5;
         const endOffY = e.y + dy * 0.5;
 
-        // Vector math for perpendicular spreading
         const perpX = -dy; 
         const perpY = dx;
         const mag = Math.sqrt(perpX*perpX + perpY*perpY);
         const pNormX = perpX / mag;
         const pNormY = perpY / mag;
 
-        // Spawn TRULY many bees (Volume increased to 60 per path for a dense cloud)
         for (let i = 0; i < 60; i++) {
-          const spread = Phaser.Math.Between(-200, 200); // Wide coverage for the 3-tile path
-          const longitudinalOffset = Phaser.Math.Between(-400, 400); // Varied start times for depth
+          const spread = Phaser.Math.Between(-200, 200); 
+          const longitudinalOffset = Phaser.Math.Between(-400, 400); 
           
           const beeScale = scale * Phaser.Math.FloatBetween(0.5, 1.1);
           const startX = startOffX + (pNormX * spread) + ( (dx/mag) * longitudinalOffset );
@@ -497,7 +495,6 @@ export class Boss {
           const bee = this.scene.add.sprite(startX, startY, 'ch2_beeswarm')
             .setDisplaySize(beeScale, beeScale).setDepth(50 + i).setFlipX(isFlip);
             
-          // Varied tint/alpha for depth perception
           bee.setTint(i % 4 === 0 ? 0xbbbbbb : (i % 3 === 0 ? 0xdddddd : 0xffffff));
           bee.setAlpha(Phaser.Math.FloatBetween(0.8, 1.0));
             
@@ -507,7 +504,7 @@ export class Boss {
             targets: bee,
             x: endOffX + (startX - startOffX),
             y: endOffY + (startY - startOffY),
-            duration: 3500 + Phaser.Math.Between(-500, 500), 
+            duration: travelTime + Phaser.Math.Between(-200, 200), 
             ease: 'Linear',
             onComplete: () => {
               if (bee.active) {
@@ -516,29 +513,31 @@ export class Boss {
             }
           });
         }
-      }
 
-      spawnSwarmLine({c: 0, r: 0}, {c: this.grid.cols-1, r: this.grid.rows-1}, false);
-      spawnSwarmLine({c: this.grid.cols-1, r: 0}, {c: 0, r: this.grid.rows-1}, true);
+        // Damage strictly follows the physical location of the bees vertically
+        for (let r = 0; r < this.grid.rows; r++) {
+          const rowStart = offscreen + r * rowWindow;
+          this.scene.time.delayedCall(rowStart, () => {
+            if (this.hp <= 0) return;
+            // Only deal damage to the tiles in the active row for this specific line
+            const rowTiles = tilesByRow[r] || [];
+            this.createDamageZone(rowTiles, rowWindow);
+          });
+        }
+      });
+    };
 
-      // Per-tile damage windows: only deal damage while bees are ACTIVELY on that row
-      // Total travel = ~3500ms. Each row gets a narrow window (~420ms) while bees pass.
-      const totalTravel = 3500;
-      const rowWindow = totalTravel / this.grid.rows;
-      const offscreen = totalTravel * 0.15; // Bees start slightly offscreen
-
-      for (let r = 0; r < this.grid.rows; r++) {
-        const rowStart = offscreen + r * rowWindow;
-        this.scene.time.delayedCall(rowStart, () => {
-          if (this.hp <= 0) return;
-          // Active damage for only the rowWindow duration (bees are crossing this row)
-          const rowTiles = [...(tilesByRow1[r] || []), ...(tilesByRow2[r] || [])];
-          this.createDamageZone(rowTiles, rowWindow);
-        });
-      }
+    // 1. Sweep Top-Left to Bottom-Right
+    executeSwarm(tiles1, tilesByRow1, {c: 0, r: 0}, {c: this.grid.cols-1, r: this.grid.rows-1}, false);
+    
+    // 2. Wait, then sweep Top-Right to Bottom-Left
+    this.scene.time.delayedCall(2200, () => {
+      if (this.hp <= 0) return;
+      executeSwarm(tiles2, tilesByRow2, {c: this.grid.cols-1, r: 0}, {c: 0, r: this.grid.rows-1}, true);
     });
 
-    return 3000;
+    // Total cooldown: 2200 (delay for 2nd) + 1200 (telegraph) + 2500 (travel) + 600 buffer = 6500
+    return 6500;
   }
 
   /** Attack 2: Hibiscus Pollen Burst — Concentric Rings Sequence */

@@ -77,6 +77,7 @@ export const GameScreen = {
           </div>
 
           <button class="menu-btn active" id="btn-resume">RESUME</button>
+          <button class="menu-btn" id="btn-restart" style="color: var(--accent-gold);">RESTART</button>
           <button class="menu-btn text-red" id="btn-quit">QUIT TO MENU</button>
         </div>
       </div>
@@ -164,6 +165,11 @@ export const GameScreen = {
         state.saveSettings();
     });
     
+    el.querySelector('#btn-restart').addEventListener('click', () => {
+      this.game.destroy(true);
+      window.__screenManager.navigate('game-screen', { chapterId: chapterId }, false);
+    });
+
     el.querySelector('#btn-quit').addEventListener('click', () => {
       this.game.destroy(true);
       gestureController.stopCamera();
