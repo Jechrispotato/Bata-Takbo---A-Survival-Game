@@ -23,7 +23,7 @@ export class Grid {
 
   calculateGrid() {
     const { width, height } = this.scene.scale;
-    const leftWidth = Math.max(250, Math.min(450, width * 0.28));
+    const leftWidth = Math.max(width < 768 ? 160 : 250, Math.min(450, width * 0.28));
     const rightWidth = width - leftWidth;
     const rightHeight = height;
 
@@ -219,6 +219,7 @@ export class Grid {
          duration: 220,
          ease: 'Back.easeOut',
          onComplete: () => {
+           if (!chestSpr.active) return;
            // Gentle continuous float — bobs ±8px forever
            const floatTween = this.scene.tweens.add({
              targets: chestSpr,
@@ -328,6 +329,7 @@ export class Grid {
          duration: 300,
          ease: 'Back.easeOut',
          onComplete: () => {
+             if (!rubySpr.active) return;
              const floatTween = this.scene.tweens.add({
                  targets: rubySpr,
                  y: rubySpr.y - 15,
@@ -415,6 +417,7 @@ export class Grid {
          duration: 300,
          ease: 'Back.easeOut',
          onComplete: () => {
+             if (!diamondSpr.active) return;
              const floatTween = this.scene.tweens.add({
                  targets: diamondSpr,
                  y: diamondSpr.y - 15,

@@ -335,7 +335,7 @@ export class Boss {
     // Eye is 2500x2500 native. Dialed up to 0.06
     const eye = this.scene.add.sprite(startX, startY, 'ch1_eye').setScale(1.5).setDepth(40);
     eye.play('anim_ch1_eye');
-    // If it comes from the left, flip it horizontally! The asset natively faces left.
+    // The asset natively faces right, so flip it if it comes from the right
     if (fromLeft) {
       eye.setFlipX(true);
     }

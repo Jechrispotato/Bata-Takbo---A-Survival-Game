@@ -26,9 +26,11 @@ export const GameScreen = {
           background: #000;
           z-index: 50;
           pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.5s ease;
         ">
-          <video id="game-video" style="width: 100%; height: 100%; object-fit: cover;"></video>
-          <canvas id="game-canvas" width="640" height="480" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"></canvas>
+          <video id="game-video" style="width: 100%; height: 100%; object-fit: contain;"></video>
+          <canvas id="game-canvas" width="640" height="480" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"></canvas>
         </div>
 
         <!-- Timer Display (positioned by HUDScene) -->

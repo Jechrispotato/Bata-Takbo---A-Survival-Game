@@ -14,7 +14,7 @@ export class HUDScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
-    const leftWidth = Math.max(250, Math.min(450, width * 0.28));
+    const leftWidth = Math.max(width < 768 ? 160 : 250, Math.min(450, width * 0.28));
 
     // ========== LEFT PANEL BACKGROUND ==========
     this.panelBg = this.add.graphics();
@@ -233,7 +233,8 @@ export class HUDScene extends Phaser.Scene {
 
     // ========== CAMERA BOX — centered in space below power-up section ==========
     const puEndY = puBoxY + puBoxH + 8; // bottom of power-up box + small gap
-    const camBoxH = Math.floor(remainingHeight * 0.30);
+    const targetCamH = Math.floor(bossBoxW * 0.75); // Ideal 4:3 aspect ratio
+    const camBoxH = Math.min(targetCamH, Math.floor(remainingHeight * 0.40));
     // Center the box in the available space between power-up bottom and screen bottom
     const camBoxY = puEndY + Math.floor((height - puEndY - camBoxH) / 2);
 
@@ -251,6 +252,7 @@ export class HUDScene extends Phaser.Scene {
       pip.style.borderRadius = '0px';
       pip.style.border = 'none';
       pip.style.boxShadow = 'none';
+      pip.style.opacity = '1';
 
       // Attach translucent eye camera overlay
       let overlay = document.getElementById('cam-eye-overlay');
@@ -332,9 +334,9 @@ export class HUDScene extends Phaser.Scene {
 
   playBossAttack() {
     if (!this.bossSprite) return;
-    this.bossSprite.play('boss_attack');
+    this.bossSprite.play('anim_boss_attack');
     this.bossSprite.once('animationcomplete', () => {
-      this.bossSprite.play('boss_idle');
+      this.bossSprite.play('anim_boss_idle');
     });
   }
 
@@ -342,9 +344,9 @@ export class HUDScene extends Phaser.Scene {
     if (!this.bossSprite) return;
 
     // Spawn the explosion right over the boss sprite in the HUD
-    const explosion = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'stylized_explosion');
-    explosion.setScale(4.0).setDepth(200);
-    explosion.play('anim_stylized_explosion');
+    const explosion = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'eye_explosion');
+    explosion.setScale(3.0).setDepth(200);
+    explosion.play('anim_eye_explosion');
     explosion.on('animationcomplete', () => explosion.destroy());
 
     // ── White-flash hit indicator ──────────────────────────────────────

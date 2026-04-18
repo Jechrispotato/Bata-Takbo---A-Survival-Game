@@ -106,7 +106,6 @@ export class GameScene extends Phaser.Scene {
     this.load.image('powerup_ui', '/assets/powerups/02.png');
 
     this.load.spritesheet('lightning_burst', '/assets/fx/lightning_burst.png', { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('stylized_explosion', '/assets/fx/stylized_explosion.png', { frameWidth: 96, frameHeight: 96 });
 
     // Boss HP bar — MinimumDamage sheet (64x16, 50 frames: frame 0 = full, frame 49 = empty, top-to-bottom)
     this.load.spritesheet('boss_hp_bar', '/assets/gui/MinimumDamage/MinimumDamage-Sheet.png', { frameWidth: 64, frameHeight: 16 });
@@ -151,12 +150,11 @@ export class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'anim_symbol_alert', frames: this.anims.generateFrameNumbers('symbol_alert'), frameRate: 20, repeat: 0 });
       this.anims.create({ key: 'anim_symbol_alert2', frames: this.anims.generateFrameNumbers('symbol_alert2'), frameRate: 60, repeat: 0 });
       this.anims.create({ key: 'anim_lightning_burst', frames: this.anims.generateFrameNumbers('lightning_burst'), frameRate: 20, repeat: 0 });
-      this.anims.create({ key: 'anim_stylized_explosion', frames: this.anims.generateFrameNumbers('stylized_explosion'), frameRate: 24, repeat: 0 });
       this.anims.create({ key: 'anim_attack_up', frames: this.anims.generateFrameNumbers('attack_up', { start: 0, end: 17 }), frameRate: 14, repeat: -1 });
       this.anims.create({ key: 'anim_smoke_up', frames: this.anims.generateFrameNumbers('smoke_up', { start: 0, end: 20 }), frameRate: 20, repeat: 0 });
       this.anims.create({ key: 'anim_chest1', frames: this.anims.generateFrameNumbers('chest1', { start: 0, end: 13 }), frameRate: 20, repeat: 0 });
       this.anims.create({ key: 'anim_chest2', frames: this.anims.generateFrameNumbers('chest2', { start: 0, end: 17 }), frameRate: 20, repeat: 0 });
-      this.anims.create({ key: 'anim_chest3', frames: this.anims.generateFrameNumbers('chest3', { start: 0, end: 89 }), frameRate: 28, repeat: 0 });
+      this.anims.create({ key: 'anim_chest3', frames: this.anims.generateFrameNumbers('chest3', { start: 0, end: 79 }), frameRate: 28, repeat: 0 });
       this.anims.create({ key: 'anim_chest4', frames: this.anims.generateFrameNumbers('chest4', { start: 0, end: 79 }), frameRate: 28, repeat: 0 });
       this.anims.create({ key: 'anim_villain_hp_up', frames: this.anims.generateFrameNumbers('villain_hp_up', { start: 0, end: 11 }), frameRate: 15, repeat: 0 });
       this.anims.create({ key: 'anim_moving_hit', frames: this.anims.generateFrameNumbers('moving_hit', { start: 0, end: 43 }), frameRate: 30, repeat: 0 });
@@ -242,6 +240,7 @@ export class GameScene extends Phaser.Scene {
           targets: [spr, glowSpr], alpha: 1, scaleX: spr.scaleX / 1.4, scaleY: spr.scaleY / 1.4,
           duration: 250, ease: 'Back.easeOut',
           onComplete: () => {
+            if (!spr.active || !glowSpr.active) return;
             this.tweens.add({ targets: spr, alpha: 0.8, yoyo: true, repeat: -1, duration: 400 });
             this.tweens.add({ targets: glowSpr, alpha: 0.4, scaleX: glowSpr.scaleX * 1.1, scaleY: glowSpr.scaleY * 1.1, yoyo: true, repeat: -1, duration: 400 });
           }
@@ -505,7 +504,7 @@ export class GameScene extends Phaser.Scene {
     this.isUltimateActive = true;
 
     const { width, height } = this.scale;
-    const leftWidth = Math.max(250, Math.min(450, width * 0.28));
+    const leftWidth = Math.max(width < 768 ? 160 : 250, Math.min(450, width * 0.28));
 
     // Pick a random target tile (slightly away from grid edges for drama)
     const tC = Phaser.Math.Between(1, this.grid.cols - 2);
@@ -687,9 +686,9 @@ export class GameScene extends Phaser.Scene {
 
   // ── Cheat activation ("jechrispogi") ──────────────────────────────
   _activateCheat() {
-    // One-time per browser session guard
-    if (window.__jechrísCheatUsed) return;
-    window.__jechrísCheatUsed = true;
+    // One-time per game session guard
+    if (this._cheatUsed) return;
+    this._cheatUsed = true;
 
     // Enable cheat mode on the boss (stops attacks, doubles loot)
     if (this.boss) this.boss.cheatMode = true;
@@ -765,9 +764,10 @@ export class GameScene extends Phaser.Scene {
     const row = Phaser.Math.Between(0, this.grid.rows - 1);
     const startLeft = Phaser.Math.Between(0, 1) === 0;
 
+    const leftWidth = Math.max(this.scale.width < 768 ? 160 : 250, Math.min(450, this.scale.width * 0.28));
     const y = this.grid.offsetY + row * this.grid.tileSize + this.grid.tileSize / 2;
-    const startX = startLeft ? -50 : this.scale.width + 50;
-    const endX = startLeft ? this.scale.width + 50 : -50;
+    const startX = startLeft ? leftWidth - 50 : this.scale.width + 50;
+    const endX = startLeft ? this.scale.width + 50 : leftWidth - 50;
 
     // 1. Show Alert outside the grid
     const alertX = startLeft ? this.grid.offsetX - 40 : this.grid.offsetX + this.grid.cols * this.grid.tileSize + 40;
