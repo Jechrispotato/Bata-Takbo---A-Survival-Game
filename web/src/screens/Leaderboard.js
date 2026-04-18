@@ -6,7 +6,7 @@ export const Leaderboard = {
   render() {
     // Mock data for now
     const mockEntries = [
-      { rank: 1, name: 'GestureKing', score: 25400 },
+      { rank: 1, name: 'JechrisPogi143', score: 25400 },
       { rank: 2, name: 'BossSlayer', score: 22100 },
       { rank: 3, name: 'DodgeMaster', score: 19800 },
       { rank: 4, name: 'PixelHero', score: 15200 },
@@ -20,7 +20,11 @@ export const Leaderboard = {
       <div class="leaderboard-entry" 
            style="animation: slideInLeft 0.3s ease forwards; animation-delay: ${i * 0.06}s; opacity: 0;">
         <span class="leaderboard-entry__rank ${entry.rank <= 3 ? 'top-3' : ''}">
-          ${entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : '#' + entry.rank}
+          ${entry.rank <= 3 
+            ? ['<img src="/assets/ui/gold.png" alt="1st" style="height: 1.2em; vertical-align: middle;" />', 
+               '<img src="/assets/ui/silver.png" alt="2nd" style="height: 1.2em; vertical-align: middle;" />', 
+               '<img src="/assets/ui/bronze.png" alt="3rd" style="height: 1.2em; vertical-align: middle;" />'][entry.rank - 1] 
+            : '#' + entry.rank}
         </span>
         <span class="leaderboard-entry__name">${entry.name}</span>
         <span class="leaderboard-entry__score">${entry.score.toLocaleString()}</span>
@@ -32,7 +36,7 @@ export const Leaderboard = {
         <button class="back-btn" id="btn-lb-back">Back</button>
         
         <h1 class="screen-title" style="animation: fadeInUp 0.4s ease forwards;">
-          🏆 Leaderboard
+          Leaderboard
         </h1>
         
         <div class="leaderboard-tabs" style="animation: fadeInUp 0.4s ease 0.1s forwards; opacity: 0;">

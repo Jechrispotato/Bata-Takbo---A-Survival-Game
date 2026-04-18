@@ -15,7 +15,7 @@ export const About = {
           
           <!-- About the Game -->
           <div class="about-section">
-            <div class="about-section__title">🎮 About the Game</div>
+            <div class="about-section__title">About the Game</div>
             <div class="about-section__text">
               <strong>Bata, Takbo!</strong> (Filipino: "Kid, Run!") is a gesture-controlled
               boss-battle survival game. Use your hands to dodge projectiles and defeat
@@ -30,7 +30,7 @@ export const About = {
 
           <!-- Privacy -->
           <div class="about-section">
-            <div class="about-section__title">🔒 Privacy & Camera</div>
+            <div class="about-section__title">Privacy & Camera</div>
             <div class="about-section__text">
               Your privacy is our highest priority:
               <br/><br/>
@@ -52,7 +52,7 @@ export const About = {
           
           <!-- Developers -->
           <div class="about-section">
-            <div class="about-section__title">👨‍💻 Developers</div>
+            <div class="about-section__title">Developers</div>
             <div class="about-section__text">
               Built with ❤️ by the Bata, Takbo! team.
             </div>
@@ -60,7 +60,7 @@ export const About = {
 
           <!-- Asset Credits -->
           <div class="about-section">
-            <div class="about-section__title">🎨 Asset Credits</div>
+            <div class="about-section__title">Asset Credits</div>
             <div class="about-section__text">
               • <strong>Character Sprites</strong> — Pixel art character animations
               <br/>
@@ -81,7 +81,7 @@ export const About = {
 
           <!-- Technology -->
           <div class="about-section">
-            <div class="about-section__title">⚙️ Built With</div>
+            <div class="about-section__title">Built With</div>
             <div class="about-section__text">
               • <strong>Phaser 3</strong> — Game engine (MIT License)
               <br/>
@@ -99,7 +99,7 @@ export const About = {
           
           <!-- License -->
           <div class="about-section">
-            <div class="about-section__title">📄 License</div>
+            <div class="about-section__title">License</div>
             <div class="about-section__text">
               © 2026 Bata, Takbo! All rights reserved.
               <br/><br/>

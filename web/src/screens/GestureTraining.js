@@ -24,7 +24,7 @@ export const GestureTraining = {
           </div>
         </div>
 
-        <p class="text-center text-dim" style="font-size: var(--text-sm); margin-bottom: var(--space-md); max-width: 400px; animation: fadeInUp 0.4s ease 0.1s forwards;">
+        <p class="text-center" style="font-size: var(--text-sm); color: white; margin-bottom: var(--space-md); max-width: 400px; animation: fadeInUp 0.4s ease 0.1s forwards;">
           Train the game to recognize YOUR hand gestures!
           Select a direction, make a gesture, and hold Record.
         </p>
@@ -41,17 +41,17 @@ export const GestureTraining = {
             <span class="gesture-dir-btn__count">0</span>
           </button>
           <button class="gesture-dir-btn" data-dir="left" id="dir-left">
-            <span class="gesture-dir-btn__arrow">◀</span>
+            <span class="gesture-dir-btn__arrow">◄</span>
             <span class="gesture-dir-btn__label">LEFT</span>
             <span class="gesture-dir-btn__count">0</span>
           </button>
           <button class="gesture-dir-btn" data-dir="right" id="dir-right">
-            <span class="gesture-dir-btn__arrow">▶</span>
+            <span class="gesture-dir-btn__arrow">►</span>
             <span class="gesture-dir-btn__label">RIGHT</span>
             <span class="gesture-dir-btn__count">0</span>
           </button>
           <button class="gesture-dir-btn" data-dir="idle" id="dir-idle" style="border-color: var(--accent-gold);">
-            <span class="gesture-dir-btn__arrow">✋</span>
+            <span class="gesture-dir-btn__arrow"><img src="/assets/ui/bone-hand.png" alt="Rest" style="height: 1em; vertical-align: bottom;" /></span>
             <span class="gesture-dir-btn__label">REST</span>
             <span class="gesture-dir-btn__count">0</span>
           </button>
@@ -60,12 +60,12 @@ export const GestureTraining = {
         <div class="progress-bar" style="animation: fadeInUp 0.4s ease 0.2s forwards;">
           <div class="progress-bar__fill" style="width: 0%;" id="gesture-progress"></div>
         </div>
-        <p class="text-dim" style="font-size: var(--text-xs); margin-bottom: var(--space-md);">
+        <p class="text-primary" style="font-size: var(--text-xs); margin-bottom: var(--space-md);">
           <span id="progress-label">0 / 20</span> samples
         </p>
 
         <button class="gesture-record-btn" id="btn-record" style="animation: fadeInUp 0.4s ease 0.25s forwards;">
-          🔴 Hold to Record
+          Hold to Record
         </button>
 
         <div style="display: flex; gap: var(--space-md); margin-top: var(--space-lg); animation: fadeInUp 0.4s ease 0.3s forwards;">
@@ -134,14 +134,14 @@ export const GestureTraining = {
       if (gestureController.isTesting) return;
 
       recordBtn.classList.add('recording');
-      recordBtn.textContent = '⏺ Recording...';
+      recordBtn.textContent = 'Recording...';
       gestureController.startRecording(this.activeDir);
     };
 
     const stopRec = (e) => {
       if(e) e.preventDefault();
       recordBtn.classList.remove('recording');
-      recordBtn.textContent = '🔴 Hold to Record';
+      recordBtn.textContent = 'Hold to Record';
       gestureController.stopRecording();
       // Auto-save briefly on stop
       gestureController.saveModel();
@@ -243,8 +243,7 @@ export const GestureTraining = {
     gestureController.isTesting = active;
 
     if (active) {
-      testBtn.style.backgroundColor = 'var(--accent-green)';
-      testBtn.style.color = 'var(--bg-primary)';
+      testBtn.style.color = 'var(-accent-red)';
       testBtn.textContent = 'Stop Testing';
       
       // hide record button

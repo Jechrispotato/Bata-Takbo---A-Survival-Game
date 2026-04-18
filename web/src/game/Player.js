@@ -18,6 +18,7 @@ export class Player {
     this.hp = 6;
     this.maxHp = 6;
     this.isInvulnerable = false;
+    this.isFrozen = false;
 
     const startPos = this.grid.getPixelPosition(this.col, this.row);
     
@@ -27,7 +28,7 @@ export class Player {
     // Scale to fit within a tile (use tileSize relative to the 48px frame width)
     const scale = (grid.tileSize * 1.4) / 48;
     this.sprite.setScale(scale);
-    this.sprite.setOrigin(0.5, 0.75); // Bottom-center anchor
+    this.sprite.setOrigin(0.5, 0.55); // Bottom-center anchor
 
     // Create directional animations — 8 frames each (0 to 7)
     if (!this.scene.anims.exists('idle_down')) {
@@ -48,7 +49,7 @@ export class Player {
   }
 
   move(direction) {
-    if (this.isMoving) return;
+    if (this.isMoving || this.isFrozen) return;
 
     let dCol = 0, dRow = 0;
     if (direction === 'up') dRow = -1;
@@ -121,6 +122,14 @@ export class Player {
     
     this.hp--;
     this.scene.events.emit('player:health_changed', this.hp);
+
+    const fx = this.scene.add.sprite(this.sprite.x, this.sprite.y, 'lives_decreased');
+    fx.setDepth(300).setScale(6.0).play('anim_lives_decreased');
+    fx.once('animationcomplete', () => fx.destroy());
+    
+    // Screen shake and red flash on hit
+    this.scene.cameras.main.shake(200, 0.015);
+    this.scene.cameras.main.flash(150, 255, 0, 0);
     
     if (this.hp <= 0) {
       this.die();
