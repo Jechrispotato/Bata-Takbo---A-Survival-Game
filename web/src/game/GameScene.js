@@ -17,7 +17,13 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     this.cameras.main.setBackgroundColor('#0a0a1a');
-    this.load.image('grid_bg', '/assets/gui/grid.png');
+    if (this.chapterId === 2) {
+      this.load.image('grid_bg', '/assets/gui/grid2.png');
+    } else if (this.chapterId === 3) {
+      this.load.image('grid_bg', '/assets/gui/grid3.png');
+    } else {
+      this.load.image('grid_bg', '/assets/gui/grid.png');
+    }
     this.load.image('grid_panel_bg', '/assets/gui/grid_second_bg.png');
     this.load.image('boss_frame', '/assets/gui/boss_frame.png');
 
