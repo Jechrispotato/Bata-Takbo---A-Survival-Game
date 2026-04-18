@@ -91,6 +91,10 @@ export class HUDScene extends Phaser.Scene {
       bossName = "SI IMELDA";
       bossTitle = "ANG UNANG MANANANGGAL";
       desc = "[LORE PLACEHOLDER] Avoid her gaze and dodge the aerial attacks.";
+    } else if (this.chapterId == 2) {
+      bossName = "BUNGISNGIS";
+      bossTitle = "ANG HIGANTENG SIKLOP";
+      desc = "A fearsome one-eyed giant. Beware the flora and fauna he commands.";
     }
 
     // Main Title (Giga Saturn) — absolute Y ~10px from top
@@ -115,15 +119,16 @@ export class HUDScene extends Phaser.Scene {
 
     // Create boss animations first
     if (!this.anims.exists('anim_boss_idle')) {
+      const isCh1 = this.chapterId === 1;
       this.anims.create({
         key: 'anim_boss_idle',
-        frames: this.anims.generateFrameNumbers('boss_idle', { start: 0, end: 54 }), // 55 frame animation
+        frames: isCh1 ? this.anims.generateFrameNumbers('boss_idle', { start: 0, end: 54 }) : this.anims.generateFrameNumbers('boss_idle'), // 55 frame vs 1 frame placeholder
         frameRate: 24,
         repeat: -1
       });
       this.anims.create({
         key: 'anim_boss_attack',
-        frames: this.anims.generateFrameNumbers('boss_cast', { start: 0, end: 7 }), // 8 frame animation
+        frames: isCh1 ? this.anims.generateFrameNumbers('boss_cast', { start: 0, end: 7 }) : this.anims.generateFrameNumbers('boss_cast'), // 8 frame vs 1 frame placeholder
         frameRate: 10,
         repeat: 0
       });
@@ -149,6 +154,47 @@ export class HUDScene extends Phaser.Scene {
     });
 
     this.bossSprite.play('anim_boss_idle');
+
+    // TEMPORARY DEBUG BUTTON FOR CHAPTER 2 SEQUENTIAL ATTACKS
+    if (this.chapterId === 2) {
+      const debugBtn = this.add.text(this.scale.width / 2, 20, 'DEBUG: RUN ALL CH2 ATTACKS', {
+        backgroundColor: '#f00',
+        color: '#fff',
+        fontFamily: 'VCR',
+        fontSize: '20px',
+        padding: { x: 10, y: 10 }
+      }).setOrigin(0.5, 0).setDepth(9999).setInteractive();
+
+      debugBtn.on('pointerdown', () => {
+        const gameScene = this.scene.get('GameScene');
+        if (!gameScene || !gameScene.boss || gameScene.boss.hp <= 0) return;
+        const boss = gameScene.boss;
+
+        // Stop standard looping
+        if (boss.attackTimer) boss.attackTimer.remove();
+
+        const attacks = [
+          () => boss.ch2AttackBeeswarm(),
+          () => boss.ch2AttackHibiscus(),
+          () => boss.ch2AttackVines(),
+          () => boss.ch2AttackCarrotRain(),
+          () => boss.ch2AttackExplodingEggs(),
+          () => boss.ch2AttackSnappingFlora(),
+          () => boss.ch2AttackAcidSpitter()
+        ];
+
+        const runNext = (idx) => {
+          if (idx >= attacks.length) return;
+          if (boss.hp <= 0 || gameScene.isGameOver) return;
+          // Change text to show current attack
+          debugBtn.setText(`RUNNING CH2 ATTACK ${idx + 1}/${attacks.length}`);
+          const duration = attacks[idx]();
+          this.time.delayedCall(duration + 1500, () => runNext(idx + 1));
+        };
+
+        runNext(0);
+      });
+    }
 
     // Boss Frame Overlay (added as an effect over the boss box)
     this.bossFrameOverlay = this.add.image(boxPadX + bossBoxW / 2, bossBoxY + bossBoxH / 2, 'boss_frame');
@@ -343,11 +389,27 @@ export class HUDScene extends Phaser.Scene {
   playBossDamageVfx() {
     if (!this.bossSprite) return;
 
-    // Spawn the explosion right over the boss sprite in the HUD
-    const explosion = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'eye_explosion');
-    explosion.setScale(3.0).setDepth(200);
-    explosion.play('anim_eye_explosion');
-    explosion.on('animationcomplete', () => explosion.destroy());
+    if (this.chapterId === 1) {
+      // Chapter 1 specific boss damage VFX
+      const explosion = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'eye_explosion');
+      explosion.setScale(3.0).setDepth(200);
+      explosion.play('anim_eye_explosion');
+      explosion.on('animationcomplete', () => explosion.destroy());
+    } else {
+      // Universal fallback for Chapter 2+
+      if (!this.anims.exists('anim_generic_damage')) {
+        this.anims.create({
+          key: 'anim_generic_damage',
+          frames: this.anims.generateFrameNumbers('fx_damage'),
+          frameRate: 20,
+          repeat: 0
+        });
+      }
+      const splat = this.add.sprite(this.bossSprite.x, this.bossSprite.y, 'fx_damage');
+      splat.setScale(3.0).setDepth(200);
+      splat.play('anim_generic_damage');
+      splat.once('animationcomplete', () => splat.destroy());
+    }
 
     // ── White-flash hit indicator ──────────────────────────────────────
     // Cancel any in-flight tint timer so rapid hits never stack/get stuck.

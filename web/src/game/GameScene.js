@@ -79,8 +79,36 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet('lives_up', '/assets/fx/lives_up.png', { frameWidth: 128, frameHeight: 128 });
       this.load.spritesheet('frozen', '/assets/fx/frozen.png', { frameWidth: 128, frameHeight: 128 });
 
+    } else if (this.chapterId === 2) {
+      // ===== CHAPTER 2: BUNGISNGIS ASSETS =====
+      this.load.spritesheet('boss_idle', '/assets/characters/boss/chapter-2/boss_idle.png', { frameWidth: 87, frameHeight: 110 });
+      this.load.spritesheet('boss_cast', '/assets/characters/boss/chapter-2/boss_idle.png', { frameWidth: 87, frameHeight: 110 });
+
+      // Attack projectiles
+      this.load.spritesheet('ch2_beeswarm', '/assets/projectiles/chapter 2/bee-swarm.png', { frameWidth: 192, frameHeight: 192 });
+      this.load.spritesheet('ch2_hibiscus', '/assets/projectiles/chapter 2/hibiscus.png', { frameWidth: 192, frameHeight: 192 });
+      this.load.spritesheet('ch2_hibiscus_burst', '/assets/projectiles/chapter 2/hibiscus-burst.png', { frameWidth: 192, frameHeight: 192 });
+      this.load.spritesheet('ch2_vines', '/assets/projectiles/chapter 2/growing-vines.png', { frameWidth: 192, frameHeight: 192 });
+      this.load.spritesheet('ch2_carrot', '/assets/projectiles/chapter 2/carrot-rain.png', { frameWidth: 192, frameHeight: 192 });
+      this.load.spritesheet('ch2_eggs', '/assets/projectiles/chapter 2/exploding-eggs.png', { frameWidth: 192, frameHeight: 192 });
+
+      // Plant entities
+      this.load.spritesheet('ch2_plant_melee', '/assets/projectiles/chapter 2/Plant3_Attack.png', { frameWidth: 64, frameHeight: 64 });
+      this.load.spritesheet('ch2_plant_ranged', '/assets/projectiles/chapter 2/Plant1_Attack.png', { frameWidth: 64, frameHeight: 64 });
+
+      // Acid projectile chain
+      this.load.spritesheet('ch2_acid_charge', '/assets/projectiles/chapter 2/Acid-01.png', { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet('ch2_acid_travel', '/assets/projectiles/chapter 2/Acid-02Repeatable.png', { frameWidth: 56, frameHeight: 32 });
+      this.load.spritesheet('ch2_acid_end', '/assets/projectiles/chapter 2/Acid-02Ending.png', { frameWidth: 56, frameHeight: 32 });
+
+      // Loot and FX
+      this.load.image('ruby_loot', '/assets/projectiles/ruby.png');
+      this.load.image('diamond_loot', '/assets/projectiles/diamond.png');
+      this.load.spritesheet('lives_up', '/assets/fx/lives_up.png', { frameWidth: 128, frameHeight: 128 });
+      this.load.spritesheet('frozen', '/assets/fx/frozen.png', { frameWidth: 128, frameHeight: 128 });
+
     } else {
-      // Default to Chapter 2 Placeholder
+      // Default fallback for future chapters
       this.load.spritesheet('boss_idle', '/assets/characters/boss/chapter-2/boss_idle.png', { frameWidth: 87, frameHeight: 110 });
       this.load.spritesheet('boss_cast', '/assets/characters/boss/chapter-2/boss_idle.png', { frameWidth: 87, frameHeight: 110 });
     }
@@ -163,12 +191,15 @@ export class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'anim_chest3', frames: this.anims.generateFrameNumbers('chest3', { start: 0, end: 79 }), frameRate: 28, repeat: 0 });
       this.anims.create({ key: 'anim_chest4', frames: this.anims.generateFrameNumbers('chest4', { start: 0, end: 79 }), frameRate: 28, repeat: 0 });
       this.anims.create({ key: 'anim_villain_hp_up', frames: this.anims.generateFrameNumbers('villain_hp_up', { start: 0, end: 11 }), frameRate: 15, repeat: 0 });
-      this.anims.create({ key: 'anim_moving_hit', frames: this.anims.generateFrameNumbers('moving_hit', { start: 0, end: 43 }), frameRate: 30, repeat: 0 });
       this.anims.create({ key: 'anim_lives_up', frames: this.anims.generateFrameNumbers('lives_up', { start: 0, end: 22 }), frameRate: 20, repeat: 0 });
       this.anims.create({ key: 'anim_lives_decreased', frames: this.anims.generateFrameNumbers('lives_decreased', { start: 105, end: 119 }), frameRate: 30, repeat: 0 });
       this.anims.create({ key: 'anim_frozen', frames: this.anims.generateFrameNumbers('frozen', { start: 0, end: 11 }), frameRate: 15, repeat: 0 });
-      this.anims.create({ key: 'anim_ch1_eye', frames: this.anims.generateFrameNumbers('ch1_eye'), frameRate: 10, repeat: -1 });
-      this.anims.create({ key: 'anim_eye_explosion', frames: this.anims.generateFrameNumbers('eye_explosion'), frameRate: 18, repeat: 0 });
+      
+      if (this.chapterId === 1) {
+        this.anims.create({ key: 'anim_moving_hit', frames: this.anims.generateFrameNumbers('moving_hit', { start: 0, end: 43 }), frameRate: 30, repeat: 0 });
+        this.anims.create({ key: 'anim_ch1_eye', frames: this.anims.generateFrameNumbers('ch1_eye'), frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'anim_eye_explosion', frames: this.anims.generateFrameNumbers('eye_explosion'), frameRate: 18, repeat: 0 });
+      }
 
       // Power Up Chest Animations (Vertical animation mapping across 9 columns where rarity defines the column index)
       const activeChests = [0, 1, 2, 8];
@@ -197,7 +228,47 @@ export class GameScene extends Phaser.Scene {
         for (let i = 0; i <= 59; i++) splatFrames.push({ key: `blood_splat_${i.toString().padStart(3, '0')}` });
         this.anims.create({ key: 'anim_blood_splat', frames: splatFrames, frameRate: 30, repeat: 0 });
       }
+
+      // ===== CHAPTER 2 ANIMATIONS =====
+      if (this.chapterId === 2 && !this.anims.exists('anim_ch2_beeswarm_in')) {
+        this.anims.create({ key: 'anim_ch2_beeswarm_in', frames: this.anims.generateFrameNumbers('ch2_beeswarm', { start: 0, end: 9 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_beeswarm_loop', frames: this.anims.generateFrameNumbers('ch2_beeswarm', { start: 10, end: 19 }), frameRate: 15, repeat: -1 });
+        this.anims.create({ key: 'anim_ch2_beeswarm_out', frames: this.anims.generateFrameNumbers('ch2_beeswarm', { start: 20, end: 28 }), frameRate: 15, repeat: 0 });
+
+        this.anims.create({ key: 'anim_ch2_hibiscus', frames: this.anims.generateFrameNumbers('ch2_hibiscus', { start: 0, end: 20 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_hibiscus_burst', frames: this.anims.generateFrameNumbers('ch2_hibiscus_burst', { start: 0, end: 37 }), frameRate: 20, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_vines_grow', frames: this.anims.generateFrameNumbers('ch2_vines', { start: 0, end: 11 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_vines_idle', frames: this.anims.generateFrameNumbers('ch2_vines', { start: 12, end: 17 }), frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'anim_ch2_vines_shrink', frames: this.anims.generateFrameNumbers('ch2_vines', { start: 18, end: 24 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_carrot', frames: this.anims.generateFrameNumbers('ch2_carrot', { start: 0, end: 27 }), frameRate: 20, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_eggs', frames: this.anims.generateFrameNumbers('ch2_eggs', { start: 0, end: 39 }), frameRate: 18, repeat: 0 });
+
+        // Plant melee — Plant3_Attack.png row order:
+        // Row 1 (0-6)  = down, Row 2 (7-13) = UP, Row 3 (14-20) = left, Row 4 (21-27) = right
+        this.anims.create({ key: 'anim_ch2_plant_melee_down',  frames: this.anims.generateFrameNumbers('ch2_plant_melee', { start: 0,  end: 6  }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_melee_up',    frames: this.anims.generateFrameNumbers('ch2_plant_melee', { start: 7,  end: 13 }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_melee_left',  frames: this.anims.generateFrameNumbers('ch2_plant_melee', { start: 14, end: 20 }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_melee_right', frames: this.anims.generateFrameNumbers('ch2_plant_melee', { start: 21, end: 27 }), frameRate: 12, repeat: 0 });
+
+        // Plant ranged — Plant1_Attack.png row order:
+        // Row 3 (14-20) = facing LEFT, Row 4 (21-27) = facing RIGHT
+        this.anims.create({ key: 'anim_ch2_plant_ranged_down',  frames: this.anims.generateFrameNumbers('ch2_plant_ranged', { start: 0,  end: 6  }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_ranged_up',    frames: this.anims.generateFrameNumbers('ch2_plant_ranged', { start: 7,  end: 13 }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_ranged_left',  frames: this.anims.generateFrameNumbers('ch2_plant_ranged', { start: 14, end: 20 }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_plant_ranged_right', frames: this.anims.generateFrameNumbers('ch2_plant_ranged', { start: 21, end: 27 }), frameRate: 12, repeat: 0 });
+
+        // Acid chain
+        this.anims.create({ key: 'anim_ch2_acid_charge', frames: this.anims.generateFrameNumbers('ch2_acid_charge', { start: 0, end: 9 }), frameRate: 12, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_acid_burst', frames: this.anims.generateFrameNumbers('ch2_acid_charge', { start: 10, end: 15 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_ch2_acid_travel', frames: this.anims.generateFrameNumbers('ch2_acid_travel', { start: 0, end: 11 }), frameRate: 15, repeat: -1 });
+        this.anims.create({ key: 'anim_ch2_acid_end', frames: this.anims.generateFrameNumbers('ch2_acid_end', { start: 0, end: 5 }), frameRate: 12, repeat: 0 });
+        // Horizontal row projectile: first 10 frames of Acid-01.png (the mouth/launch animation)
+        this.anims.create({ key: 'anim_ch2_acid_projectile', frames: this.anims.generateFrameNumbers('ch2_acid_charge', { start: 0, end: 9 }), frameRate: 15, repeat: -1 });
+      }
     }
+
+    // Persistent entities for Chapter 2 (melee/ranged plants)
+    this.persistentEntities = [];
 
     // --- GAME LOGIC EVENTS ---
 
@@ -262,9 +333,15 @@ export class GameScene extends Phaser.Scene {
 
     this.events.on('damageTile:despawned', (col, row) => {
       if (this.goldenTile && this.goldenTile.col === col && this.goldenTile.row === row) {
-        if (this.goldenTile.sprite) this.goldenTile.sprite.destroy();
+        if (this.goldenTile.sprite) {
+          this.tweens.killTweensOf([this.goldenTile.sprite, this.goldenTile.glow]);
+          this.goldenTile.sprite.destroy();
+        }
         if (this.goldenTile.glow) this.goldenTile.glow.destroy();
-        if (this.goldenTile.shadow) this.goldenTile.shadow.destroy();
+        if (this.goldenTile.shadow) {
+          this.tweens.killTweensOf(this.goldenTile.shadow);
+          this.goldenTile.shadow.destroy();
+        }
         this.goldenTile = null;
       }
     });
@@ -272,10 +349,19 @@ export class GameScene extends Phaser.Scene {
     this.events.on('player:moved', (col, row) => {
       if (this.goldenTile && this.goldenTile.col === col && this.goldenTile.row === row) {
         console.log("BOSS HIT!");
-        if (this.goldenTile.sprite) this.goldenTile.sprite.destroy();
+        if (this.goldenTile.sprite) {
+          this.tweens.killTweensOf([this.goldenTile.sprite, this.goldenTile.glow]);
+          this.goldenTile.sprite.destroy();
+        }
         if (this.goldenTile.glow) this.goldenTile.glow.destroy();
-        if (this.goldenTile.shadow) this.goldenTile.shadow.destroy();
+        if (this.goldenTile.shadow) {
+          this.tweens.killTweensOf(this.goldenTile.shadow);
+          this.goldenTile.shadow.destroy();
+        }
         this.boss.takeDamage();
+        // Fire golden particles from the tile toward the boss
+        const hitPos = this.grid.getPixelPosition(col, row);
+        this.launchAttackParticles(hitPos.x, hitPos.y);
         this.goldenTile = null;
         this.grid.render();
       }
@@ -465,6 +551,18 @@ export class GameScene extends Phaser.Scene {
 
     this.events.on('player:died', () => this.showGameOver(false));
     this.events.on('boss:died', () => this.showGameOver(true));
+
+    // ─── Helper: Generate the particle texture once ───────────────────────────
+    if (!this.textures.exists('attack_particle')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Simple pixel square for a retro look
+      g.fillStyle(0xFFD700, 1);
+      g.fillRect(0, 0, 8, 8);
+      g.fillStyle(0xFFFFFF, 0.8);
+      g.fillRect(2, 2, 4, 4); // inner highlight
+      g.generateTexture('attack_particle', 8, 8);
+      g.destroy();
+    }
 
     // Launch HUD
     this.scene.launch('HUDScene', { chapterId: this.chapterId });
@@ -856,6 +954,101 @@ export class GameScene extends Phaser.Scene {
         }
       });
     }
+
+    // Chapter 2: Persistent entity proximity checks (melee plants)
+    if (this.persistentEntities && this.persistentEntities.length > 0) {
+      this.persistentEntities.forEach(ent => {
+        if (!ent.active || !ent.sprite || !ent.sprite.active) return;
+        
+        // Dynamically face the player if not currently performing an attack animation
+        if (!ent.sprite.anims.isPlaying) {
+          const dx = this.player.col - ent.col;
+          const dy = this.player.row - ent.row;
+          let fIdx = 0;
+          if (Math.abs(dx) > Math.abs(dy)) {
+            fIdx = dx > 0 ? 7 : 14; 
+          } else {
+            fIdx = dy > 0 ? 0 : 21; 
+          }
+          ent.sprite.setFrame(fIdx);
+        }
+
+        if (ent.type === 'melee' && !ent._attackCooldown) {
+          const MathAbsDc = Math.abs(this.player.col - ent.col);
+          const MathAbsDr = Math.abs(this.player.row - ent.row);
+          // Only cardinal adjacency
+          if ((MathAbsDc === 1 && MathAbsDr === 0) || (MathAbsDc === 0 && MathAbsDr === 1)) {
+            ent._attackCooldown = true;
+            let dir = 'down';
+            if (this.player.row < ent.row) dir = 'up';
+            else if (this.player.row > ent.row) dir = 'down';
+            else if (this.player.col < ent.col) dir = 'left';
+            else if (this.player.col > ent.col) dir = 'right';
+
+            ent.sprite.play(`anim_ch2_plant_melee_${dir}`);
+            this.time.delayedCall(300, () => {
+              if (this.player.col === ent.col + (dir === 'right' ? 1 : dir === 'left' ? -1 : 0) &&
+                  this.player.row === ent.row + (dir === 'down' ? 1 : dir === 'up' ? -1 : 0)) {
+                this.player.takeDamage();
+              }
+            });
+            this.time.delayedCall(1500, () => {
+              if (ent.onAttackComplete) ent.onAttackComplete();
+              else ent._attackCooldown = false;
+            });
+          }
+        }
+      });
+    }
+  }
+
+  /** Fire golden particles from a tile position to the boss sprite */
+  launchAttackParticles(fromX, fromY) {
+    const { width, height } = this.scale;
+    const leftWidth = Math.floor(width * 0.28);
+    const bossBoxH  = Math.floor((height - 155) * 0.38);
+    const bossX = leftWidth / 2;
+    const bossY = 155 + bossBoxH / 2;
+
+    const COUNT = 15;
+    for (let i = 0; i < COUNT; i++) {
+      if (this.isGameOver) return;
+
+      const particle = this.add.image(fromX, fromY, 'attack_particle')
+        .setDepth(60)
+        .setScale(Phaser.Math.FloatBetween(1, 1.5));
+
+      // Phase 1: Scatter outward from the tile
+      const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+      const dist = Phaser.Math.FloatBetween(40, 90);
+      const scatterX = fromX + Math.cos(angle) * dist;
+      const scatterY = fromY + Math.sin(angle) * dist;
+
+      this.tweens.add({
+        targets: particle,
+        x: scatterX,
+        y: scatterY,
+        duration: Phaser.Math.Between(200, 350),
+        ease: 'Quad.easeOut',
+        onComplete: () => {
+          if (this.isGameOver) {
+            particle.destroy();
+            return;
+          }
+          // Phase 2: Zip to the boss
+          this.tweens.add({
+            targets: particle,
+            x: bossX + Phaser.Math.Between(-20, 20),
+            y: bossY + Phaser.Math.Between(-20, 20),
+            scale: 0.5,
+            duration: Phaser.Math.Between(300, 500),
+            ease: 'Back.easeIn', // pull back slightly then shoot forward
+            delay: Phaser.Math.Between(0, 150), // Random pause before zipping
+            onComplete: () => particle.destroy()
+          });
+        }
+      });
+    }
   }
 
   showGameOver(isVictory) {
@@ -914,6 +1107,17 @@ export class GameScene extends Phaser.Scene {
     if (this.unsubGesture) this.unsubGesture();
     // Remove cheat listener to prevent memory leaks across scene restarts
     if (this._cheatKeyHandler) window.removeEventListener('keydown', this._cheatKeyHandler);
+    // Cleanup persistent entities
+    if (this.persistentEntities) {
+      this.persistentEntities.forEach(ent => {
+        if (ent.sprite && ent.sprite.active) ent.sprite.destroy();
+        if (ent.timer) ent.timer.remove();
+        if (ent.fireTimer) ent.fireTimer.remove();
+      });
+      this.persistentEntities = [];
+    }
+    // Cleanup vine QTE
+    if (this._vineQteUnsub) this._vineQteUnsub();
     this.events.removeAllListeners();
     this.scene.stop('HUDScene');
   }
