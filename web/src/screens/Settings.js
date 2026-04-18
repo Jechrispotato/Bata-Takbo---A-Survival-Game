@@ -18,7 +18,7 @@ export const Settings = {
         <div class="settings-screen__content scrollable">
           <!-- Camera & Privacy -->
           <div class="settings-group" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.1s; opacity: 0;">
-            <div class="settings-group__title">🎥 Camera & Privacy</div>
+            <div class="settings-group__title"> Camera & Privacy</div>
             
             <div class="setting-row">
               <span class="setting-row__label">Privacy Mode</span>
@@ -39,7 +39,7 @@ export const Settings = {
 
           <!-- Audio -->
           <div class="settings-group" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.2s; opacity: 0;">
-            <div class="settings-group__title">🔊 Audio</div>
+            <div class="settings-group__title">Audio</div>
             
             <div class="setting-row">
               <span class="setting-row__label">Master</span>
@@ -82,7 +82,7 @@ export const Settings = {
 
           <!-- Gesture -->
           <div class="settings-group" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.3s; opacity: 0;">
-            <div class="settings-group__title">🎮 Gesture Control</div>
+            <div class="settings-group__title">Gesture Control</div>
             
             <div class="setting-row">
               <span class="setting-row__label">Sensitivity</span>
@@ -107,7 +107,7 @@ export const Settings = {
 
           <!-- Display -->
           <div class="settings-group" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.4s; opacity: 0;">
-            <div class="settings-group__title">🎨 Display</div>
+            <div class="settings-group__title">Display</div>
             
             <div class="setting-row">
               <span class="setting-row__label">Screen Shake</span>
@@ -136,11 +136,11 @@ export const Settings = {
 
           <!-- Reset Tutorial -->
           <div class="settings-group" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.5s; opacity: 0;">
-            <div class="settings-group__title">🔧 Other</div>
+            <div class="settings-group__title">Other</div>
             <div class="setting-row">
               <span class="setting-row__label">Reset Tutorial</span>
               <button class="menu-btn" id="btn-reset-tutorial" style="font-size: var(--text-sm); padding: var(--space-xs) var(--space-md);">
-                Reset
+                 Reset
               </button>
             </div>
           </div>

@@ -81,7 +81,7 @@ export const Spellbook = {
         <button class="back-btn" id="btn-spellbook-back">Back</button>
         
         <h1 class="screen-title" style="animation: fadeInUp 0.4s ease forwards;">
-          📖 Spellbook
+          Spellbook
         </h1>
         
         <div class="spellbook-entries scrollable" style="margin-top: var(--space-lg);">
